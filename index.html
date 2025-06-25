@@ -259,7 +259,7 @@
                 <p><strong>OBS Setup Instructions:</strong></p>
                 <ol style="color: #fff; margin-left: 20px;">
                     <li>Download OBS Studio (free)</li>
-                    <li>Add Browser Source: <strong>https://sovagpt.github.io/oiunk</strong></li>
+                    <li>Add Browser Source: <strong>https://oiunk.vercel.app</strong></li>
                     <li>Set Width: 800, Height: 400</li>
                     <li>Connect OBS to YouTube and go live!</li>
                 </ol>
@@ -283,7 +283,6 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                     'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
                     'https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_MP3_700KB.mp3'
                 ];
-                this.apiKey = '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';
                 
                 // Media elements
                 this.canvas = document.getElementById('streamCanvas');
@@ -393,38 +392,43 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
             }
 
             async generateRadioContent(cryptoData) {
-    const prompt = `You are Porky, a charismatic crypto radio host on OINK FM 24.7. 
-    Create a short, engaging radio segment (30-60 seconds when spoken) about recent crypto news.
-    
-    Current crypto data: ${JSON.stringify(cryptoData)}
-    
-    Style: Casual, enthusiastic, slightly edgy like a pirate radio DJ with pig-themed humor
-    Include: Current prices, trending coins, market sentiment, memecoin mentions
-    Personality: Fun, irreverent, uses pig puns and crypto slang
-    End with: A smooth transition to introduce the next song
-    Keep it under 150 words and make it sound natural and spontaneous.`;
+                const prompt = `You are Porky, a charismatic crypto radio host on OINK FM 24.7. 
+                Create a short, engaging radio segment (30-60 seconds when spoken) about recent crypto news.
+                
+                Current crypto data: ${JSON.stringify(cryptoData)}
+                
+                Style: Casual, enthusiastic, slightly edgy like a pirate radio DJ with pig-themed humor
+                Include: Current prices, trending coins, market sentiment, memecoin mentions
+                Personality: Fun, irreverent, uses pig puns and crypto slang
+                End with: A smooth transition to introduce the next song
+                Keep it under 150 words and make it sound natural and spontaneous.`;
 
-    try {
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ prompt })
-        });
+                try {
+                    // Call our Vercel API endpoint (not Anthropic directly)
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ prompt })
+                    });
 
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
-        }
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error('API Error:', errorData);
+                        throw new Error(`API Error: ${response.status} - ${errorData.error || 'Unknown error'}`);
+                    }
 
-        const data = await response.json();
-        return data.content;
-    } catch (error) {
-        console.error('Error generating content:', error);
-        this.updateStatus("⚠️ API Error - using fallback content");
-        return "Oink oink! Porky here on OINK FM! The crypto markets are absolutely hog wild today - Bitcoin's squealing to new heights, memecoins are rolling in the mud, and the whole space is more chaotic than feeding time at the farm! But hey, that's why we love this pig pen, right? Let's bacon some musical magic while I sniff out more juicy intel for you beautiful degenerates!";
-    }
-}
+                    const data = await response.json();
+                    console.log('✅ AI content generated successfully!');
+                    return data.content;
+                    
+                } catch (error) {
+                    console.error('Error generating content:', error);
+                    this.updateStatus("⚠️ API Error - using fallback content");
+                    return "Oink oink! Porky here on OINK FM! The crypto markets are absolutely hog wild today - Bitcoin's squealing to new heights, memecoins are rolling in the mud, and the whole space is more chaotic than feeding time at the farm! But hey, that's why we love this pig pen, right? Let's bacon some musical magic while I sniff out more juicy intel for you beautiful degenerates!";
+                }
+            }
 
             async textToSpeech(text) {
                 return new Promise((resolve) => {
