@@ -60,7 +60,7 @@
             background: #000;
         }
 
-        .studio-img, .porky-video, .reporter-gif {
+        .studio-img, .porky-video {
             position: absolute;
             top: 0;
             left: 0;
@@ -69,7 +69,7 @@
             object-fit: cover;
         }
 
-        .porky-video, .reporter-gif {
+        .porky-video {
             display: none;
         }
 
@@ -81,48 +81,47 @@
             display: block;
         }
 
-        .reporter-gif {
-            width: 50%;
-            height: 100%;
-            left: -50%;
-            transition: left 1s ease-in-out;
+        /* Perky Reporter Styles */
+        .perky-reporter {
+            position: absolute;
+            left: -400px; /* Start off-screen */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 350px;
+            height: 600px;
             z-index: 10;
-            background: rgba(0, 0, 0, 0.1);
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 0;
         }
 
-        .reporter-gif.visible {
-            display: block;
-            left: 0;
+        .perky-reporter.visible {
+            left: 20px; /* Slide into frame */
+            opacity: 1;
         }
 
-        .reporter-gif.fade-in {
-            animation: fadeInSlide 1s ease-in-out;
+        .perky-reporter img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.4);
+            border: 3px solid #ff1493;
         }
 
-        .reporter-gif.fade-out {
-            animation: fadeOutSlide 1s ease-in-out;
-        }
-
-        @keyframes fadeInSlide {
-            0% { 
-                left: -50%; 
-                opacity: 0; 
-            }
-            100% { 
-                left: 0; 
-                opacity: 1; 
-            }
-        }
-
-        @keyframes fadeOutSlide {
-            0% { 
-                left: 0; 
-                opacity: 1; 
-            }
-            100% { 
-                left: -50%; 
-                opacity: 0; 
-            }
+        /* Perky Reporter Badge */
+        .perky-badge {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #ff1493, #ff69b4);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.3);
+            border: 2px solid white;
         }
 
         .status-display {
@@ -181,10 +180,21 @@
             background: linear-gradient(45deg, #9c88ff, #6c63ff);
         }
 
+        .btn.perky {
+            background: linear-gradient(45deg, #ff1493, #ff69b4);
+            animation: pulse-pink 2s infinite;
+        }
+
         @keyframes pulse-orange {
             0% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(255, 149, 0, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0); }
+        }
+
+        @keyframes pulse-pink {
+            0% { box-shadow: 0 0 0 0 rgba(255, 20, 147, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 20, 147, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 20, 147, 0); }
         }
 
         .audio-player {
@@ -278,6 +288,11 @@
         .topic-item.urgent {
             border-left-color: #ff6b00;
             background: rgba(255, 149, 0, 0.2);
+        }
+
+        .topic-item.perky-report {
+            border-left-color: #ff1493;
+            background: rgba(255, 20, 147, 0.2);
         }
 
         .topic-meta {
@@ -385,6 +400,48 @@
             border-radius: 3px;
             font-size: 13px;
         }
+
+        /* Reporter Type Toggle */
+        .reporter-toggle {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            align-items: center;
+        }
+
+        .toggle-label {
+            color: #fff;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .reporter-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .reporter-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #6c63ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .reporter-option.perky {
+            border-color: #ff1493;
+        }
+
+        .reporter-option.active {
+            background: #6c63ff;
+        }
+
+        .reporter-option.perky.active {
+            background: #ff1493;
+        }
     </style>
 </head>
 <body>
@@ -404,10 +461,11 @@
                 <source src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.mp4" type="video/mp4">
             </video>
 
-            <!-- Perky Reporter GIF -->
-            <img id="reporterGif" class="reporter-gif" 
-                 src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/reporter.gif" 
-                 alt="Perky Reporter">
+            <!-- Perky Reporter -->
+            <div id="perkyReporter" class="perky-reporter">
+                <img src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/reporter.gif" alt="Perky Reporter">
+                <div class="perky-badge">📺 PERKY LIVE</div>
+            </div>
         </div>
 
         <div class="status-display" id="statusDisplay">
@@ -442,6 +500,7 @@
             <button class="btn stop" onclick="stopShow()">⏹️ Stop Show</button>
             <button class="btn" onclick="skipToNext()">⏭️ Skip Segment</button>
             <button class="btn breaking" onclick="breakingNews()">📡 Breaking News</button>
+            <button class="btn perky" onclick="perkyReport()">📺 Perky Report</button>
             <button class="btn knowledge" onclick="viewKnowledge()">🧠 View Knowledge</button>
         </div>
 
@@ -476,7 +535,7 @@ Examples:
                     <option value="memecoin">Memecoin Focus</option>
                     <option value="defi">DeFi Update</option>
                     <option value="regulatory">Regulatory News</option>
-                    <option value="perky_report">Perky Report</option>
+                    <option value="perky_report">📺 Perky Report</option>
                 </select>
                 
                 <select id="topicPriority" style="width: 120px;">
@@ -488,10 +547,18 @@ Examples:
                 <input type="text" id="topicTags" placeholder="Tags (comma separated)" style="flex: 1;">
             </div>
 
+            <div class="reporter-toggle">
+                <span class="toggle-label">Reporter:</span>
+                <div class="reporter-options">
+                    <div class="reporter-option active" data-reporter="porky">🐷 Porky</div>
+                    <div class="reporter-option perky" data-reporter="perky">📺 Perky</div>
+                </div>
+            </div>
+
             <div class="topic-controls">
                 <button class="btn" onclick="addTopic()">📝 Add to Queue</button>
                 <button class="btn breaking" onclick="addUrgentTopic()">🚨 Add Urgent</button>
-                <button class="btn knowledge" onclick="addPerkyReport()">📺 Add Perky Report</button>
+                <button class="btn perky" onclick="addPerkyReport()">📺 Add Perky Report</button>
                 <button class="btn stop" onclick="clearQueue()">🗑️ Clear Queue</button>
                 <button class="btn" onclick="refreshQueue()">🔄 Refresh</button>
             </div>
@@ -536,11 +603,12 @@ Loading music library from GitHub...
                 this.isPlaying = false;
                 this.currentSegment = null;
                 this.songs = []; // Will auto-load from GitHub
+                this.selectedReporter = 'porky';
                 
                 // DOM elements
                 this.studioImg = document.getElementById('studioImg');
                 this.porkyVideo = document.getElementById('porkyVideo');
-                this.reporterGif = document.getElementById('reporterGif');
+                this.perkyReporter = document.getElementById('perkyReporter');
                 this.audioPlayer = document.getElementById('audioPlayer');
                 this.statusDisplay = document.getElementById('statusDisplay');
                 this.newsTicker = document.getElementById('newsTicker');
@@ -629,6 +697,16 @@ Loading music library from GitHub...
                     console.log('✅ Studio image loaded');
                 });
 
+                // Reporter toggle listeners
+                document.querySelectorAll('.reporter-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        document.querySelectorAll('.reporter-option').forEach(opt => opt.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.selectedReporter = e.target.dataset.reporter;
+                        console.log(`Selected reporter: ${this.selectedReporter}`);
+                    });
+                });
+
                 // Auto-refresh data every 30 seconds
                 setInterval(() => {
                     if (!this.isPlaying) {
@@ -648,7 +726,8 @@ Loading music library from GitHub...
                     content: content,
                     type: document.getElementById('topicType').value,
                     priority: document.getElementById('topicPriority').value,
-                    tags: document.getElementById('topicTags').value.split(',').map(t => t.trim()).filter(t => t)
+                    tags: document.getElementById('topicTags').value.split(',').map(t => t.trim()).filter(t => t),
+                    reporter: this.selectedReporter
                 };
 
                 try {
@@ -685,7 +764,7 @@ Loading music library from GitHub...
 
             async addPerkyReport() {
                 document.getElementById('topicType').value = 'perky_report';
-                document.getElementById('topicPriority').value = 'normal';
+                document.querySelector('[data-reporter="perky"]').click();
                 await this.addTopic();
             }
 
@@ -779,9 +858,9 @@ Loading music library from GitHub...
                     `;
                 } else {
                     this.topicQueue.innerHTML = queue.map(topic => `
-                        <div class="topic-item ${topic.priority === 'urgent' ? 'urgent' : ''}">
+                        <div class="topic-item ${topic.priority === 'urgent' ? 'urgent' : ''} ${topic.type === 'perky_report' || topic.reporter === 'perky' ? 'perky-report' : ''}">
                             <div class="topic-meta">
-                                <span>${topic.type} • ${topic.priority}</span>
+                                <span>${topic.type} • ${topic.priority} • ${topic.reporter === 'perky' ? '📺 Perky' : '🐷 Porky'}</span>
                                 <span>${new Date(topic.timestamp).toLocaleTimeString()}</span>
                                 <button class="remove-btn" onclick="radio.removeTopic(${topic.id})">Remove</button>
                             </div>
@@ -850,7 +929,7 @@ Loading music library from GitHub...
                 }
             }
 
-            async generateRadioContent(cryptoData) {
+            async generateRadioContent(cryptoData, topicData = null) {
                 try {
                     const response = await fetch('/api/enhanced-chat', {
                         method: 'POST',
@@ -859,7 +938,8 @@ Loading music library from GitHub...
                         },
                         body: JSON.stringify({ 
                             cryptoData,
-                            requestType: 'segment'
+                            requestType: 'segment',
+                            topicData: topicData
                         })
                     });
 
@@ -883,6 +963,110 @@ Loading music library from GitHub...
                 }
             }
 
+            async generatePerkyReport(content) {
+                try {
+                    const response = await fetch('/api/enhanced-chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            cryptoData: await this.fetchCryptoNews(),
+                            requestType: 'perky_report',
+                            fieldIntel: content
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    await this.refreshStats();
+                    return data.content;
+                    
+                } catch (error) {
+                    console.error('Perky report generation failed:', error);
+                    return `Good evening, I'm Perky with a special report. ${content} We'll have more updates on this developing story as it unfolds. Back to you, Porky.`;
+                }
+            }
+
+            async perkyReport() {
+                const content = this.topicInput.value.trim();
+                if (!content) {
+                    this.updateStatus('❌ Enter story content for Perky first!');
+                    return;
+                }
+
+                try {
+                    this.updateStatus('📺 Perky is preparing her report...');
+                    
+                    // Generate Perky's report
+                    const perkyScript = await this.generatePerkyReport(content);
+                    
+                    // Clear the input
+                    this.topicInput.value = '';
+                    
+                    // Show Perky reporting
+                    await this.showPerkyReporting();
+                    this.updateStatus('📺 Perky: Live from the newsroom!');
+                    
+                    // Perky speaks (with her voice ID)
+                    await this.textToSpeech(perkyScript, 'perky');
+                    
+                    // Hide Perky
+                    await this.hidePerky();
+                    
+                    // Generate Porky's follow-up
+                    this.updateStatus('🎙️ Porky is responding to the report...');
+                    const porkyFollowUp = await this.generatePorkyFollowUp(content, perkyScript);
+                    
+                    // Show Porky talking
+                    this.showPorkyTalking();
+                    this.updateStatus('🎙️ Porky: Thanks for that update, Perky!');
+                    
+                    // Porky responds
+                    await this.textToSpeech(porkyFollowUp, 'porky');
+                    
+                    // Return to studio
+                    this.showStudio();
+                    this.updateStatus('📻 Report complete - continuing show...');
+                    
+                } catch (error) {
+                    console.error('Perky report failed:', error);
+                    this.updateStatus('❌ Perky report system malfunction!');
+                    await this.hidePerky();
+                }
+            }
+
+            async generatePorkyFollowUp(originalContent, perkyReport) {
+                try {
+                    const response = await fetch('/api/enhanced-chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            cryptoData: await this.fetchCryptoNews(),
+                            requestType: 'porky_followup',
+                            originalContent: originalContent,
+                            perkyReport: perkyReport
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    return data.content;
+                    
+                } catch (error) {
+                    console.error('Porky follow-up generation failed:', error);
+                    return `OINK OINK! Thanks for that excellent report, Perky! That's exactly the kind of intel our listeners need to hear! My knowledge base is updating with this information and we'll keep tracking this story. Now let me spin some tracks while I process all this data!`;
+                }
+            }
+
             async breakingNews() {
                 const content = this.topicInput.value.trim();
                 if (!content) {
@@ -903,7 +1087,7 @@ Loading music library from GitHub...
                     this.updateStatus('🎙️ Porky: BREAKING NEWS ALERT!');
                     
                     // Speak the content
-                    await this.textToSpeech(radioScript);
+                    await this.textToSpeech(radioScript, 'porky');
                     
                     // Return to studio
                     this.showStudio();
@@ -943,164 +1127,213 @@ Loading music library from GitHub...
                 }
             }
 
-            async textToSpeech(text) {
-                return new Promise((resolve) => {
-                    if ('speechSynthesis' in window) {
-                        const utterance = new SpeechSynthesisUtterance(text);
-                        utterance.rate = 0.9;
-                        utterance.pitch = 1.1;
-                        utterance.volume = 0.8;
+            async textToSpeech(text, voiceType = 'porky') {
+                try {
+                    // Use different voice IDs for Porky and Perky
+                    const voiceId = voiceType === 'perky' ? '19STyYD15bswVz51nqLf' : 'porky';
+                    
+                    const response = await fetch('/api/tts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            text: text,
+                            voice: voiceId
+                        })
+                    });
+
+                    if (response.ok) {
+                        const audioBlob = await response.blob();
+                        const audioUrl = URL.createObjectURL(audioBlob);
                         
-                        const voices = speechSynthesis.getVoices();
-                        const preferredVoice = voices.find(voice => 
-                            voice.name.includes('Google') || 
-                            voice.name.includes('Microsoft') ||
-                            voice.lang.includes('en-US')
-                        );
-                        if (preferredVoice) {
-                            utterance.voice = preferredVoice;
-                        }
-                        
-                        utterance.onend = resolve;
-                        utterance.onerror = resolve;
-                        
-                        speechSynthesis.speak(utterance);
+                        return new Promise((resolve) => {
+                            const audio = new Audio(audioUrl);
+                            audio.onended = () => {
+                                URL.revokeObjectURL(audioUrl);
+                                resolve();
+                            };
+                            audio.onerror = () => {
+                                console.error('ElevenLabs audio playback failed');
+                                resolve();
+                            };
+                            audio.play();
+                        });
                     } else {
-                        setTimeout(resolve, text.length * 50);
+                        throw new Error('ElevenLabs TTS failed');
                     }
+                } catch (error) {
+                    console.error('ElevenLabs TTS error, falling back to browser TTS:', error);
+                    
+                    // Fallback to browser TTS
+                    return new Promise((resolve) => {
+                        if ('speechSynthesis' in window) {
+                            const utterance = new SpeechSynthesisUtterance(text);
+                            utterance.rate = voiceType === 'perky' ? 1.0 : 0.9;
+                            utterance.pitch = voiceType === 'perky' ? 1.3 : 1.1;
+                            utterance.volume = 0.8;
+                            
+                            const voices = speechSynthesis.getVoices();
+                            let preferredVoice;
+                            
+                            if (voiceType === 'perky') {
+                                // Try to find a female voice for Perky
+                                preferredVoice = voices.find(voice => 
+                                    voice.name.toLowerCase().includes('female') || 
+                                    voice.name.toLowerCase().includes('woman') ||
+                                    voice.name.includes('Zira') ||
+                                    voice.name.includes('Hazel')
+                                );
+                            }
+                            
+                            if (!preferredVoice) {
+                                preferredVoice = voices.find(voice => 
+                                    voice.name.includes('Google') || 
+                                    voice.name.includes('Microsoft') ||
+                                    voice.lang.includes('en-US')
+                                );
+                            }
+                            
+                            if (preferredVoice) {
+                                utterance.voice = preferredVoice;
+                            }
+                            
+                            utterance.onend = resolve;
+                            utterance.onerror = resolve;
+                            
+                            speechSynthesis.speak(utterance);
+                        } else {
+                            setTimeout(resolve, text.length * 50);
+                        }
+                    });
+                }
+            }
+
+            async showPerkyReporting() {
+                return new Promise((resolve) => {
+                    // Show studio background
+                    this.showStudio();
+                    
+                    // Slide Perky into frame
+                    this.perkyReporter.classList.add('visible');
+                    
+                    console.log('📺 Perky sliding into frame...');
+                    
+                    // Wait for animation to complete
+                    setTimeout(resolve, 800);
                 });
             }
 
-            async handlePerkyReport(topicData) {
-                try {
-                    // Generate Perky's news report
-                    this.updateStatus("📺 Perky is preparing her report...");
-                    const perkyReport = await this.generatePerkyReport(topicData);
+            async hidePerky() {
+                return new Promise((resolve) => {
+                    this.perkyReporter.classList.remove('visible');
                     
-                    // Show studio background and slide Perky in
-                    this.showStudio();
-                    this.showPerkyReporter();
-                    this.updateStatus("📺 Perky: Breaking news report!");
+                    console.log('📺 Perky sliding out of frame...');
                     
-                    // Perky speaks with her voice
-                    await this.textToSpeech(perkyReport, 'perky');
-                    
-                    // Hide Perky and show Porky
-                    this.hidePerkyReporter();
-                    await this.delay(1000); // Wait for slide out animation
-                    this.showPorkyTalking();
-                    
-                    // Generate Porky's follow-up
-                    this.updateStatus("🎙️ Porky is responding to Perky's report...");
-                    const porkyFollowUp = await this.generatePorkyFollowUp(topicData, perkyReport);
-                    
-                    // Porky responds
-                    await this.textToSpeech(porkyFollowUp, 'porky');
-                    
-                } catch (error) {
-                    console.error('Perky report failed:', error);
-                    this.updateStatus("❌ Report system malfunction!");
-                }
+                    // Wait for animation to complete
+                    setTimeout(resolve, 800);
+                });
             }
 
-            async generatePerkyReport(topicData) {
-                try {
-                    const response = await fetch('/api/enhanced-chat', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ 
-                            cryptoData: await this.fetchCryptoNews(),
-                            requestType: 'perky_report',
-                            fieldIntel: topicData.content
-                        })
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        return data.content;
-                    } else {
-                        throw new Error('API error');
-                    }
-                } catch (error) {
-                    return `Good evening, this is Perky with OINK FM News. ${topicData.content} We'll continue to monitor this developing story. Back to you, Porky!`;
-                }
-            }
-
-            async generatePorkyFollowUp(topicData, perkyReport) {
-                try {
-                    const response = await fetch('/api/enhanced-chat', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ 
-                            cryptoData: await this.fetchCryptoNews(),
-                            requestType: 'porky_followup',
-                            fieldIntel: `Perky just reported: ${perkyReport}. Original story: ${topicData.content}`
-                        })
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        return data.content;
-                    } else {
-                        throw new Error('API error');
-                    }
-                } catch (error) {
-                    return `Thanks Perky! Absolutely wild stuff happening out there. This is exactly the kind of intel our crypto family needs to hear. Let me dig deeper into this while we pump some beats!`;
-                }
-            }
-
-            showPerkyReporter() {
-                this.reporterGif.classList.add('visible', 'fade-in');
-                console.log('📺 Perky slides into frame');
-            }
-
-            hidePerkyReporter() {
-                this.reporterGif.classList.remove('fade-in');
-                this.reporterGif.classList.add('fade-out');
-                setTimeout(() => {
-                    this.reporterGif.classList.remove('visible', 'fade-out');
-                }, 1000);
-                console.log('📺 Perky slides out of frame');
-            }
+            async startShow() {
+                if (this.isPlaying) return;
                 
                 this.isPlaying = true;
                 this.updateStatus("🎙️ OINK FM is going LIVE!");
                 
+                // Check for queued topics that need specific handling
+                let queuedTopics = [];
+                try {
+                    const response = await fetch('/api/enhanced-chat?type=queue');
+                    const data = await response.json();
+                    queuedTopics = data.queue || [];
+                } catch (error) {
+                    console.error('Failed to fetch queue:', error);
+                }
+                
+                // Pre-generate first segment
+                let nextRadioScript = null;
+                let nextCryptoData = null;
+                
                 while (this.isPlaying) {
                     try {
-                        // Fetch crypto data
-                        const cryptoData = await this.fetchCryptoNews();
+                        // Check for priority Perky reports or urgent topics
+                        const urgentPerkyReport = queuedTopics.find(topic => 
+                            topic.type === 'perky_report' || 
+                            (topic.reporter === 'perky' && topic.priority === 'urgent')
+                        );
                         
-                        if (cryptoData) {
-                            // Update news ticker
-                            this.updateNewsTicker(cryptoData);
+                        if (urgentPerkyReport) {
+                            // Handle Perky report
+                            await this.handlePerkyReport(urgentPerkyReport);
                             
-                            // Generate radio content (will use queue topics automatically)
-                            this.updateStatus("🤖 Porky is accessing his knowledge base...");
-                            const radioScript = await this.generateRadioContent(cryptoData);
+                            // Remove the handled topic from queue
+                            await this.removeTopic(urgentPerkyReport.id);
                             
-                            // Show Porky talking (video plays automatically)
-                            this.showPorkyTalking();
-                            this.updateStatus("🎙️ Porky is sharing his accumulated wisdom...");
+                            // Refresh queue for next iteration
+                            const refreshResponse = await fetch('/api/enhanced-chat?type=queue');
+                            const refreshData = await refreshResponse.json();
+                            queuedTopics = refreshData.queue || [];
                             
-                            // Speak the content
-                            await this.textToSpeech(radioScript);
-                            
-                            // Switch to studio view
-                            this.showStudio();
-                            this.updateStatus("🎵 Now spinning tracks...");
-                            
-                            // Play random song
-                            await this.playRandomSong();
+                            continue;
                         }
                         
-                        // Wait before next segment
+                        // Regular segment handling
+                        if (!nextRadioScript) {
+                            nextCryptoData = await this.fetchCryptoNews();
+                            if (nextCryptoData) {
+                                this.updateNewsTicker(nextCryptoData);
+                                this.updateStatus("🤖 Porky is preparing his thoughts...");
+                                
+                                // Check for regular queued topics
+                                const nextTopic = queuedTopics.find(topic => topic.type !== 'perky_report' && topic.reporter !== 'perky');
+                                nextRadioScript = await this.generateRadioContent(nextCryptoData, nextTopic);
+                                
+                                if (nextTopic) {
+                                    await this.removeTopic(nextTopic.id);
+                                    const refreshResponse = await fetch('/api/enhanced-chat?type=queue');
+                                    const refreshData = await refreshResponse.json();
+                                    queuedTopics = refreshData.queue || [];
+                                }
+                            }
+                        }
+                        
+                        // Use the pre-generated content immediately
+                        if (nextRadioScript) {
+                            this.showPorkyTalking();
+                            this.updateStatus("🎙️ Porky is dropping knowledge...");
+                            
+                            // Speak the content
+                            await this.textToSpeech(nextRadioScript, 'porky');
+                            
+                            // Clear used content
+                            nextRadioScript = null;
+                            nextCryptoData = null;
+                        }
+                        
+                        // Switch to studio view for music
+                        this.showStudio();
+                        this.updateStatus("🎵 Now spinning tracks...");
+                        
+                        // Start background content generation WHILE music plays
+                        const backgroundGeneration = this.generateNextSegment(queuedTopics);
+                        
+                        // Play music
+                        await this.playRandomSong();
+                        
+                        // Get the pre-generated content (should be ready by now)
+                        try {
+                            const result = await backgroundGeneration;
+                            nextRadioScript = result.content;
+                            nextCryptoData = result.cryptoData;
+                            console.log("✅ Next segment ready! No delay for next speech.");
+                        } catch (error) {
+                            console.error("Background generation failed:", error);
+                        }
+                        
+                        // Small pause between segments
                         if (this.isPlaying) {
-                            await this.delay(10000);
+                            await this.delay(2000);
                         }
                         
                     } catch (error) {
@@ -1111,10 +1344,72 @@ Loading music library from GitHub...
                 }
             }
 
+            async handlePerkyReport(topic) {
+                try {
+                    this.updateStatus('📺 Perky is preparing her report...');
+                    
+                    // Generate Perky's report
+                    const perkyScript = await this.generatePerkyReport(topic.content);
+                    
+                    // Show Perky reporting
+                    await this.showPerkyReporting();
+                    this.updateStatus('📺 Perky: Live from the newsroom!');
+                    
+                    // Perky speaks
+                    await this.textToSpeech(perkyScript, 'perky');
+                    
+                    // Hide Perky
+                    await this.hidePerky();
+                    
+                    // Generate Porky's follow-up
+                    this.updateStatus('🎙️ Porky is responding to the report...');
+                    const porkyFollowUp = await this.generatePorkyFollowUp(topic.content, perkyScript);
+                    
+                    // Show Porky talking
+                    this.showPorkyTalking();
+                    this.updateStatus('🎙️ Porky: Thanks for that update, Perky!');
+                    
+                    // Porky responds
+                    await this.textToSpeech(porkyFollowUp, 'porky');
+                    
+                    // Return to studio
+                    this.showStudio();
+                    this.updateStatus('📻 Report complete - continuing show...');
+                    
+                } catch (error) {
+                    console.error('Perky report handling failed:', error);
+                    this.updateStatus('❌ Perky report system malfunction!');
+                    await this.hidePerky();
+                }
+            }
+
+            // Add this new function for background generation
+            async generateNextSegment(queuedTopics = []) {
+                try {
+                    console.log("🔄 Generating next segment in background...");
+                    
+                    const cryptoData = await this.fetchCryptoNews();
+                    if (!cryptoData) {
+                        throw new Error("Failed to fetch crypto data");
+                    }
+                    
+                    // Check for next topic to cover
+                    const nextTopic = queuedTopics.find(topic => topic.type !== 'perky_report' && topic.reporter !== 'perky');
+                    const content = await this.generateRadioContent(cryptoData, nextTopic);
+                    
+                    console.log("✅ Background generation complete!");
+                    return { content, cryptoData };
+                    
+                } catch (error) {
+                    console.error("Background generation error:", error);
+                    throw error;
+                }
+            }
+
             async playRandomSong() {
                 if (this.songs.length === 0) {
                     console.log('🎵 No songs available, skipping music segment');
-                    await this.delay(30000); // Wait 30 seconds instead of playing music
+                    await this.delay(30000);
                     return;
                 }
                 
@@ -1129,7 +1424,7 @@ Loading music library from GitHub...
                             this.audioPlayer.onerror = (error) => {
                                 console.error(`❌ Song failed to play:`, error);
                                 console.error(`❌ Failed URL: ${randomSong}`);
-                                resolve(); // Continue to next attempt
+                                resolve();
                             };
                             
                             this.audioPlayer.oncanplaythrough = () => {
@@ -1164,7 +1459,7 @@ Loading music library from GitHub...
                         console.error(`❌ Song attempt ${attempt + 1} failed:`, error);
                         if (attempt === 2) {
                             console.log('🎵 All song attempts failed, continuing without music');
-                            await this.delay(30000); // Wait 30 seconds
+                            await this.delay(30000);
                             return;
                         }
                     }
@@ -1175,6 +1470,7 @@ Loading music library from GitHub...
                 this.isPlaying = false;
                 this.audioPlayer.pause();
                 this.showStudio();
+                this.hidePerky();
                 this.updateStatus("📻 OINK FM is off the air");
                 speechSynthesis.cancel();
             }
@@ -1188,9 +1484,9 @@ Loading music library from GitHub...
             }
 
             showPorkyTalking() {
-                this.studioImg.classList.add('visible');
+                this.studioImg.classList.remove('visible');
                 this.porkyVideo.classList.add('visible');
-                this.reporterGif.classList.remove('visible');
+                this.perkyReporter.classList.remove('visible');
                 this.porkyVideo.currentTime = 0;
                 this.porkyVideo.play();
                 console.log('🐷 Showing Porky video - should be animating!');
@@ -1199,7 +1495,6 @@ Loading music library from GitHub...
             showStudio() {
                 this.porkyVideo.classList.remove('visible');
                 this.porkyVideo.pause();
-                this.reporterGif.classList.remove('visible');
                 this.studioImg.classList.add('visible');
                 console.log('🎵 Showing studio image');
             }
@@ -1249,6 +1544,10 @@ Loading music library from GitHub...
             radio.addUrgentTopic();
         }
 
+        function addPerkyReport() {
+            radio.addPerkyReport();
+        }
+
         function clearQueue() {
             radio.clearQueue();
         }
@@ -1273,8 +1572,8 @@ Loading music library from GitHub...
             radio.breakingNews();
         }
 
-        function addPerkyReport() {
-            radio.addPerkyReport();
+        function perkyReport() {
+            radio.perkyReport();
         }
 
         // Load voices when available
