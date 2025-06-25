@@ -14,15 +14,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { text } = req.body;
+    const { text, voice } = req.body;
     
     if (!process.env.ELEVENLABS_API_KEY) {
       throw new Error('ElevenLabs API key not configured');
     }
 
-    const voiceId = '4YYIPFl9wE5c4L2eu2Gb';
+    // Voice ID mapping
+    let voiceId;
+    if (voice === '19STyYD15bswVz51nqLf' || voice === 'perky') {
+      voiceId = '19STyYD15bswVz51nqLf'; // Perky's voice
+    } else {
+      voiceId = '4YYIPFl9wE5c4L2eu2Gb'; // Porky's default voice
+    }
 
-    console.log('Generating speech with ElevenLabs...');
+    console.log(`Generating speech with ElevenLabs using voice: ${voiceId} (${voice === 'perky' || voice === '19STyYD15bswVz51nqLf' ? 'Perky' : 'Porky'})`);
 
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
@@ -35,9 +41,9 @@ export default async function handler(req, res) {
         text: text,
         model_id: 'eleven_monolingual_v1',
         voice_settings: {
-          stability: 0.4,
-          similarity_boost: 0.8,
-          style: 0.7,
+          stability: voice === 'perky' || voice === '19STyYD15bswVz51nqLf' ? 0.6 : 0.4,
+          similarity_boost: voice === 'perky' || voice === '19STyYD15bswVz51nqLf' ? 0.9 : 0.8,
+          style: voice === 'perky' || voice === '19STyYD15bswVz51nqLf' ? 0.8 : 0.7,
           use_speaker_boost: true
         }
       })
@@ -55,10 +61,10 @@ export default async function handler(req, res) {
     res.setHeader('Content-Length', audioBuffer.byteLength);
     res.send(Buffer.from(audioBuffer));
 
-    console.log('Speech generated successfully');
+    console.log(`Speech generated successfully for ${voice === 'perky' || voice === '19STyYD15bswVz51nqLf' ? 'Perky' : 'Porky'}`);
 
   } catch (error) {
     console.error('TTS generation failed:', error);
     res.status(500).json({ error: error.message });
   }
-}
+} =
