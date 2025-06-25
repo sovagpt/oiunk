@@ -686,14 +686,22 @@ Loading music library from GitHub...
             }
 
             setupEventListeners() {
-                // Video event listeners
-                this.porkyVideo.addEventListener('loadeddata', () => {
-                    console.log('✅ Porky video loaded and ready');
-                });
+                // GIF event listeners - with safety checks
+                if (this.porkyGif) {
+                    this.porkyGif.addEventListener('load', () => {
+                        console.log('✅ Porky GIF loaded and ready');
+                    });
+                } else {
+                    console.error('❌ Porky GIF element not found');
+                }
                 
-                this.studioImg.addEventListener('load', () => {
-                    console.log('✅ Studio image loaded');
-                });
+                if (this.studioImg) {
+                    this.studioImg.addEventListener('load', () => {
+                        console.log('✅ Studio image loaded');
+                    });
+                } else {
+                    console.error('❌ Studio image element not found');
+                }
 
                 // Reporter toggle listeners
                 document.querySelectorAll('.reporter-option').forEach(option => {
@@ -1482,18 +1490,25 @@ Loading music library from GitHub...
             }
 
             showPorkyTalking() {
-                this.studioImg.classList.remove('visible');
-                this.porkyVideo.classList.add('visible');
-                this.perkyReporter.classList.remove('visible');
-                this.porkyVideo.currentTime = 0;
-                this.porkyVideo.play();
-                console.log('🐷 Showing Porky video - should be animating!');
+                if (this.studioImg) {
+                    this.studioImg.classList.remove('visible');
+                }
+                if (this.porkyGif) {
+                    this.porkyGif.classList.add('visible');
+                }
+                if (this.perkyReporter) {
+                    this.perkyReporter.classList.remove('visible');
+                }
+                console.log('🐷 Showing Porky GIF - should be animating!');
             }
 
             showStudio() {
-                this.porkyVideo.classList.remove('visible');
-                this.porkyVideo.pause();
-                this.studioImg.classList.add('visible');
+                if (this.porkyGif) {
+                    this.porkyGif.classList.remove('visible');
+                }
+                if (this.studioImg) {
+                    this.studioImg.classList.add('visible');
+                }
                 console.log('🎵 Showing studio image');
             }
 
