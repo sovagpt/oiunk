@@ -52,7 +52,7 @@
         .visual-container {
             position: relative;
             width: 100%;
-            height: 400px;
+            height: 500px;
             margin: 20px 0;
             border-radius: 15px;
             overflow: hidden;
@@ -62,7 +62,7 @@
         .canvas-container {
             position: relative;
             width: 100%;
-            height: 400px;
+            height: 500px;
             border-radius: 15px;
             overflow: hidden;
             background: #000;
@@ -71,7 +71,7 @@
         #streamCanvas {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
         }
 
         .status-display {
@@ -232,7 +232,6 @@
             <div class="canvas-container">
                 <canvas id="streamCanvas" width="1403" height="992"></canvas>
             </div>
-            <div class="live-indicator" id="liveIndicator">🔴 LIVE</div>
         </div>
 
         <div class="status-display" id="statusDisplay">
@@ -297,6 +296,7 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                 
                 // Force GIF to loop by reloading when talking starts
                 this.isTalking = false;
+                this.lastGifRefresh = 0;
                 
                 // DOM elements
                 this.audioPlayer = document.getElementById('audioPlayer');
@@ -331,15 +331,23 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
             }
 
             animate() {
+                const now = Date.now();
+                
                 // Clear canvas
                 this.ctx.clearRect(0, 0, 1403, 992);
                 
-                // Draw current image
+                // Draw current image with proper scaling
                 if (this.currentImage === 'studio' && this.studioImage.complete) {
                     this.ctx.drawImage(this.studioImage, 0, 0, 1403, 992);
                 } else if (this.currentImage === 'porky' && this.porkyGif.complete) {
-                    // For GIF animation, we'll redraw it continuously to keep it looping
+                    // Force continuous redraw for GIF animation
                     this.ctx.drawImage(this.porkyGif, 0, 0, 1403, 992);
+                    
+                    // If talking, force refresh every 100ms to keep GIF animating
+                    if (this.isTalking && now - this.lastGifRefresh > 100) {
+                        this.lastGifRefresh = now;
+                        // This helps ensure the GIF keeps animating
+                    }
                 } else {
                     // Fallback background
                     this.ctx.fillStyle = '#667eea';
@@ -350,7 +358,7 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                     this.ctx.fillText('OINK FM Studio', 701, 496);
                 }
                 
-                // Add OINK FM logo overlay when live
+                // Add OINK FM logo overlay when live (removed LIVE indicator)
                 if (this.isPlaying) {
                     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                     this.ctx.fillRect(20, 20, 350, 120);
@@ -471,7 +479,6 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                 if (this.isPlaying) return;
                 
                 this.isPlaying = true;
-                this.liveIndicator.classList.add('active');
                 this.updateStatus("🎙️ OINK FM is going LIVE!");
                 
                 // Load additional songs if any
@@ -522,7 +529,6 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
 
             stop() {
                 this.isPlaying = false;
-                this.liveIndicator.classList.remove('active');
                 this.audioPlayer.pause();
                 this.showStudio();
                 this.updateStatus("📻 OINK FM is off the air");
@@ -540,11 +546,15 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
             showPorkyTalking() {
                 this.currentImage = 'porky';
                 this.isTalking = true;
+                this.lastGifRefresh = Date.now();
                 
-                // Force reload the GIF to restart animation
-                const gifSrc = this.porkyGif.src;
-                this.porkyGif.src = '';
-                this.porkyGif.src = gifSrc + '?t=' + Date.now(); // Add timestamp to force reload
+                // Create a new image element to force GIF restart
+                const newGif = new Image();
+                newGif.crossOrigin = "anonymous";
+                newGif.onload = () => {
+                    this.porkyGif = newGif;
+                };
+                newGif.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif?t=' + Date.now();
             }
 
             showStudio() {
