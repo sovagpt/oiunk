@@ -59,22 +59,19 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
 
-        .studio-image, .host-gif {
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #streamCanvas {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            position: absolute;
-            top: 0;
-            left: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        .host-gif {
-            opacity: 0;
-        }
-
-        .host-gif.active {
-            opacity: 1;
         }
 
         .status-display {
@@ -176,6 +173,18 @@
             100% { opacity: 0.5; }
         }
 
+        .news-ticker {
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff41;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
         .streaming-section {
             background: rgba(255, 0, 0, 0.1);
             border: 2px solid #ff4757;
@@ -212,21 +221,6 @@
             padding: 15px;
             margin: 10px 0;
         }
-
-        .canvas-container {
-            position: relative;
-            width: 100%;
-            height: 400px;
-            border-radius: 15px;
-            overflow: hidden;
-            background: #000;
-        }
-
-        #streamCanvas {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
     </style>
 </head>
 <body>
@@ -242,7 +236,7 @@
         </div>
 
         <div class="status-display" id="statusDisplay">
-            🎙️ Ready to broadcast... Configure your API key below!
+            🎙️ Ready to broadcast... Click Start Show!
         </div>
 
         <div class="news-ticker" id="newsTicker">
@@ -253,41 +247,30 @@
             <button class="btn" onclick="startShow()">🎙️ Start Show</button>
             <button class="btn stop" onclick="stopShow()">⏹️ Stop Show</button>
             <button class="btn" onclick="skipToNext()">⏭️ Skip Segment</button>
-            <button class="btn" onclick="startYouTubeStream()">📺 Start YouTube Stream</button>
-            <button class="btn stop" onclick="stopYouTubeStream()">⏹️ Stop Stream</button>
-        </div>
-
-        <div class="streaming-section">
-            <h3>📺 YouTube Live Streaming <span class="stream-status" id="streamStatus"></span></h3>
-            <div class="youtube-setup">
-                <p><strong>Setup Instructions:</strong></p>
-                <ol style="color: #fff; margin-left: 20px;">
-                    <li>Go to <a href="https://studio.youtube.com" target="_blank" style="color: #4ecdc4;">YouTube Studio</a></li>
-                    <li>Click "Go Live" → "Webcam" → "More Options"</li>
-                    <li>Copy your Stream Key and paste it below</li>
-                    <li>Set Category to "Music" or "Gaming"</li>
-                    <li>Click "Start Show" here, then "Go Live" on YouTube</li>
-                </ol>
-                <input type="password" id="streamKey" placeholder="Paste your YouTube Stream Key here" style="margin-top: 10px;">
-            </div>
-        </div>
-
-        <div class="news-ticker" id="newsTicker" style="background: rgba(0, 0, 0, 0.8); color: #00ff41; padding: 10px; border-radius: 5px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 0.9em; max-height: 100px; overflow-y: auto;">
-            Latest crypto intel will appear here...
         </div>
 
         <audio class="audio-player" id="audioPlayer" controls>
             Your browser does not support the audio element.
         </audio>
 
+        <div class="streaming-section">
+            <h3>📺 YouTube Live Streaming <span class="stream-status" id="streamStatus"></span></h3>
+            <div class="youtube-setup">
+                <p><strong>OBS Setup Instructions:</strong></p>
+                <ol style="color: #fff; margin-left: 20px;">
+                    <li>Download OBS Studio (free)</li>
+                    <li>Add Browser Source: <strong>https://sovagpt.github.io/oiunk</strong></li>
+                    <li>Set Width: 800, Height: 400</li>
+                    <li>Connect OBS to YouTube and go live!</li>
+                </ol>
+            </div>
+        </div>
+
         <div class="config-section">
-            <h3>⚙️ Configuration</h3>
-            <input type="password" id="apiKey" placeholder="Enter your Anthropic API Key">
-            <textarea id="songList" rows="3" placeholder="Add your song URLs (one per line)">
+            <h3>🎵 Add More Music (Optional)</h3>
+            <textarea id="songList" rows="3" placeholder="Add more song URLs (one per line)">
 https://www.soundjay.com/misc/sounds/bell-ringing-05.wav
 https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_MP3_700KB.mp3</textarea>
-            <input type="text" id="studioImageUrl" placeholder="Studio image URL (replace placeholder)">
-            <input type="text" id="hostGifUrl" placeholder="Host talking GIF URL (replace placeholder)">
         </div>
     </div>
 
@@ -295,22 +278,23 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
         class OinkFMRadio {
             constructor() {
                 this.isPlaying = false;
-                this.isStreaming = false;
                 this.currentSegment = null;
-                this.songs = [];
-                this.apiKey = '';
-                this.streamKey = '';
+                this.songs = [
+                    'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
+                    'https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_MP3_700KB.mp3'
+                ];
+                this.apiKey = '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';
                 
                 // Media elements
                 this.canvas = document.getElementById('streamCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.mediaStream = null;
-                this.mediaRecorder = null;
+                this.currentImage = 'studio';
                 
-                // Images
+                // Images - Your GitHub URLs
                 this.studioImage = new Image();
                 this.porkyGif = new Image();
-                this.currentImage = 'studio';
+                this.studioImage.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/studio.jpg';
+                this.porkyGif.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif';
                 
                 // DOM elements
                 this.audioPlayer = document.getElementById('audioPlayer');
@@ -324,31 +308,41 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
             }
 
             setupCanvas() {
-                // Set canvas size
                 this.canvas.width = 800;
                 this.canvas.height = 400;
                 
-                // Default studio background
+                // Default background
                 this.ctx.fillStyle = '#667eea';
                 this.ctx.fillRect(0, 0, 800, 400);
                 this.ctx.fillStyle = 'white';
                 this.ctx.font = '24px Arial';
                 this.ctx.textAlign = 'center';
-                this.ctx.fillText('OINK FM Studio - Upload your images!', 400, 200);
+                this.ctx.fillText('OINK FM Studio - Loading...', 400, 200);
                 
                 // Start animation loop
                 this.animate();
             }
 
             animate() {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, 800, 400);
+                
                 // Draw current image
-                if (this.currentImage === 'studio' && this.studioImage.src && this.studioImage.complete) {
+                if (this.currentImage === 'studio' && this.studioImage.complete) {
                     this.ctx.drawImage(this.studioImage, 0, 0, 800, 400);
-                } else if (this.currentImage === 'porky' && this.porkyGif.src && this.porkyGif.complete) {
+                } else if (this.currentImage === 'porky' && this.porkyGif.complete) {
                     this.ctx.drawImage(this.porkyGif, 0, 0, 800, 400);
+                } else {
+                    // Fallback background
+                    this.ctx.fillStyle = '#667eea';
+                    this.ctx.fillRect(0, 0, 800, 400);
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.font = '24px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('OINK FM Studio', 400, 200);
                 }
                 
-                // Add OINK FM logo overlay
+                // Add OINK FM logo overlay when live
                 if (this.isPlaying) {
                     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                     this.ctx.fillRect(10, 10, 200, 60);
@@ -368,39 +362,18 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                     this.ctx.fillStyle = '#00ff41';
                     this.ctx.font = '16px Courier New';
                     this.ctx.textAlign = 'left';
-                    this.ctx.fillText(this.newsTicker.textContent.substring(0, 80) + '...', 10, 385);
+                    const tickerText = this.newsTicker.textContent.substring(0, 80) + '...';
+                    this.ctx.fillText(tickerText, 10, 385);
                 }
                 
                 requestAnimationFrame(() => this.animate());
             }
 
             setupEventListeners() {
-                // Update images when URLs are entered
-                document.getElementById('studioImageUrl').addEventListener('input', (e) => {
-                    if (e.target.value) {
-                        this.studioImage.src = e.target.value;
-                    }
-                });
-
-                document.getElementById('porkyGifUrl').addEventListener('input', (e) => {
-                    if (e.target.value) {
-                        this.porkyGif.src = e.target.value;
-                    }
-                });
-
                 // Update song list
                 document.getElementById('songList').addEventListener('input', (e) => {
-                    this.songs = e.target.value.split('\n').filter(url => url.trim());
-                });
-
-                // Update API key
-                document.getElementById('apiKey').addEventListener('input', (e) => {
-                    this.apiKey = e.target.value;
-                });
-
-                // Update stream key
-                document.getElementById('streamKey').addEventListener('input', (e) => {
-                    this.streamKey = e.target.value;
+                    const newSongs = e.target.value.split('\n').filter(url => url.trim());
+                    this.songs = [...this.songs, ...newSongs];
                 });
             }
 
@@ -408,11 +381,10 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                 try {
                     this.updateStatus("📡 Fetching latest crypto data...");
                     
-                    // Using CoinGecko API (no key required)
                     const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h');
                     const data = await response.json();
                     
-                    return data.slice(0, 5); // Top 5 coins
+                    return data.slice(0, 5);
                 } catch (error) {
                     console.error('Error fetching crypto data:', error);
                     this.updateNewsTicker("❌ Failed to fetch crypto data");
@@ -421,10 +393,6 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
             }
 
             async generateRadioContent(cryptoData) {
-                if (!this.apiKey) {
-                    return "Yo crypto fam! Frank here on OINK FM! The markets are absolutely wild today. Bitcoin and the gang are doing their usual dance, and the memecoins are going absolutely bonkers! While I gather the latest intel, let's vibe to some tunes!";
-                }
-
                 const prompt = `You are Porky, a charismatic crypto radio host on OINK FM 24.7. 
                 Create a short, engaging radio segment (30-60 seconds when spoken) about recent crypto news.
                 
@@ -475,7 +443,6 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                         utterance.pitch = 1.1;
                         utterance.volume = 0.8;
                         
-                        // Try to use a more natural voice
                         const voices = speechSynthesis.getVoices();
                         const preferredVoice = voices.find(voice => 
                             voice.name.includes('Google') || 
@@ -491,7 +458,6 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                         
                         speechSynthesis.speak(utterance);
                     } else {
-                        // Fallback: just wait a bit if TTS not available
                         setTimeout(resolve, text.length * 50);
                     }
                 });
@@ -504,16 +470,11 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                 this.liveIndicator.classList.add('active');
                 this.updateStatus("🎙️ OINK FM is going LIVE!");
                 
-                // Load songs
+                // Load additional songs if any
                 const songInput = document.getElementById('songList').value;
-                this.songs = songInput.split('\n').filter(url => url.trim());
+                const additionalSongs = songInput.split('\n').filter(url => url.trim());
+                this.songs = [...this.songs, ...additionalSongs];
                 
-                if (this.songs.length === 0) {
-                    this.updateStatus("⚠️ No songs configured! Add some URLs first.");
-                    this.stop();
-                    return;
-                }
-
                 while (this.isPlaying) {
                     try {
                         // Fetch crypto data
@@ -544,7 +505,7 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                         
                         // Wait before next segment
                         if (this.isPlaying) {
-                            await this.delay(10000); // 10 seconds between segments
+                            await this.delay(10000);
                         }
                         
                     } catch (error) {
@@ -580,49 +541,6 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                 this.currentImage = 'studio';
             }
 
-            async startYouTubeStream() {
-                if (!this.streamKey) {
-                    this.updateStatus("❌ Please enter your YouTube Stream Key first!");
-                    return;
-                }
-
-                try {
-                    // Capture canvas stream
-                    this.mediaStream = this.canvas.captureStream(30); // 30fps
-                    
-                    // Add audio if available
-                    if (this.audioPlayer.captureStream) {
-                        const audioStream = this.audioPlayer.captureStream();
-                        audioStream.getAudioTracks().forEach(track => {
-                            this.mediaStream.addTrack(track);
-                        });
-                    }
-
-                    this.isStreaming = true;
-                    this.streamStatus.classList.add('live');
-                    this.updateStatus("📺 YouTube stream started! Canvas is being captured.");
-                    
-                    // Note: Actual RTMP streaming to YouTube requires a media server
-                    // This captures the canvas - you'll need OBS or similar to stream to YouTube
-                    console.log("Stream ready - use OBS to capture this browser window");
-                    
-                } catch (error) {
-                    console.error('Error starting YouTube stream:', error);
-                    this.updateStatus("❌ Failed to start YouTube stream");
-                }
-            }
-
-            stopYouTubeStream() {
-                if (this.mediaStream) {
-                    this.mediaStream.getTracks().forEach(track => track.stop());
-                    this.mediaStream = null;
-                }
-                
-                this.isStreaming = false;
-                this.streamStatus.classList.remove('live');
-                this.updateStatus("📺 YouTube stream stopped");
-            }
-
             updateStatus(message) {
                 this.statusDisplay.textContent = message;
                 console.log(message);
@@ -651,7 +569,6 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                         resolve();
                     });
                     
-                    // Resolve after song ends or after max time
                     const timeout = setTimeout(resolve, 180000); // Max 3 minutes
                     this.audioPlayer.onended = () => {
                         clearTimeout(timeout);
@@ -685,12 +602,11 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
             radio.skipToNext();
         }
 
-        function startYouTubeStream() {
-            radio.startYouTubeStream();
-        }
-
-        function stopYouTubeStream() {
-            radio.stopYouTubeStream();
+        // Load voices when available
+        if ('speechSynthesis' in window) {
+            speechSynthesis.onvoiceschanged = () => {
+                console.log('Available voices:', speechSynthesis.getVoices().map(v => v.name));
+            };
         }
     </script>
 </body>
