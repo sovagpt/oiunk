@@ -288,16 +288,14 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                 this.ctx = this.canvas.getContext('2d');
                 this.currentImage = 'studio';
                 
-                // Images - separate GIF element for animation
+                // Images - Keep GIF always animating
                 this.studioImage = new Image();
-                this.porkyGifElement = document.createElement('img');
-                this.porkyGifElement.crossOrigin = "anonymous";
-                this.porkyGifElement.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif';
-                
+                this.porkyGif = new Image();
                 this.studioImage.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/studio.jpg';
+                this.porkyGif.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif';
                 
-                // Tracking
-                this.isTalking = false;
+                // Start with studio image
+                this.currentImage = 'studio';
                 
                 // DOM elements
                 this.audioPlayer = document.getElementById('audioPlayer');
@@ -335,12 +333,12 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                 // Clear canvas
                 this.ctx.clearRect(0, 0, 1403, 992);
                 
-                // Draw current image at native size (no stretching)
+                // Draw current image - GIF will animate automatically
                 if (this.currentImage === 'studio' && this.studioImage.complete) {
                     this.ctx.drawImage(this.studioImage, 0, 0, 1403, 992);
-                } else if (this.currentImage === 'porky' && this.porkyGifElement.complete) {
-                    // Draw the GIF element which will animate naturally
-                    this.ctx.drawImage(this.porkyGifElement, 0, 0, 1403, 992);
+                } else if (this.currentImage === 'porky' && this.porkyGif.complete) {
+                    // GIF animates automatically when drawn repeatedly
+                    this.ctx.drawImage(this.porkyGif, 0, 0, 1403, 992);
                 } else {
                     // Fallback background
                     this.ctx.fillStyle = '#667eea';
@@ -525,37 +523,12 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
 
             showPorkyTalking() {
                 this.currentImage = 'porky';
-                this.isTalking = true;
-                
-                // Method 1: Try creating a video element instead of img
-                const video = document.createElement('video');
-                video.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif';
-                video.autoplay = true;
-                video.loop = true;
-                video.muted = true;
-                video.style.display = 'none';
-                document.body.appendChild(video);
-                
-                video.onloadeddata = () => {
-                    this.porkyGifElement = video;
-                    console.log('🐷 Porky video loaded and should be animating');
-                };
-                
-                // Method 2: Fallback with timestamp
-                const img = document.createElement('img');
-                img.crossOrigin = "anonymous";
-                img.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif?cachebust=' + Math.random();
-                img.onload = () => {
-                    if (!this.porkyGifElement || this.porkyGifElement.tagName !== 'VIDEO') {
-                        this.porkyGifElement = img;
-                        console.log('🐷 Porky image loaded as fallback');
-                    }
-                };
+                console.log('🎙️ Switching to Porky GIF (should animate)');
             }
 
             showStudio() {
                 this.currentImage = 'studio';
-                this.isTalking = false;
+                console.log('🎵 Switching to studio image');
             }
 
             updateStatus(message) {
