@@ -511,8 +511,27 @@ async function getMemoryData() {
     const recent = await redis.lrange('porky:memory', 0, 9);
     const recentTopics = await redis.smembers('porky:recent_topics');
     
+    // Better JSON parsing with error handling
+    const parsedRecent = recent.map(item => {
+      try {
+        // If it's already an object, return it
+        if (typeof item === 'object' && item !== null) {
+          return item;
+        }
+        // If it's a string, try to parse it
+        if (typeof item === 'string') {
+          return JSON.parse(item);
+        }
+        // Fallback
+        return { timestamp: Date.now(), topics: [], content: 'Unknown' };
+      } catch (error) {
+        console.log('Failed to parse memory item:', item);
+        return { timestamp: Date.now(), topics: [], content: 'Parse error' };
+      }
+    });
+    
     return {
-      recent: recent.map(item => JSON.parse(item)),
+      recent: parsedRecent,
       recentTopics: Array.from(recentTopics)
     };
   } catch (error) {
@@ -529,7 +548,10 @@ async function storeMemory(memoryItem) {
       token: process.env.KV_REST_API_TOKEN,
     });
     
-    await redis.lpush('porky:memory', JSON.stringify(memoryItem));
+    // Ensure we're storing as a JSON string
+    const jsonString = JSON.stringify(memoryItem);
+    
+    await redis.lpush('porky:memory', jsonString);
     await redis.ltrim('porky:memory', 0, 9);
     
     for (const topic of memoryItem.topics) {
@@ -540,6 +562,22 @@ async function storeMemory(memoryItem) {
     console.log('✅ Memory stored successfully');
   } catch (error) {
     console.log('Memory storage failed:', error.message);
+  }
+}
+
+async function clearMemory() {
+  try {
+    const { Redis } = await import('@upstash/redis');
+    const redis = new Redis({
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
+    });
+    
+    await redis.del('porky:memory');
+    await redis.del('porky:recent_topics');
+    console.log('🧹 Memory cleared');
+  } catch (error) {
+    console.log('Clear memory failed:', error.message);
   }
 }
 
