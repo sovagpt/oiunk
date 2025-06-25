@@ -351,19 +351,6 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                     this.ctx.fillText('OINK FM Studio', 701, 496);
                 }
                 
-                // Add OINK FM logo overlay when live
-                if (this.isPlaying) {
-                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                    this.ctx.fillRect(20, 20, 350, 120);
-                    this.ctx.fillStyle = '#ff6b6b';
-                    this.ctx.font = 'bold 36px Arial';
-                    this.ctx.textAlign = 'left';
-                    this.ctx.fillText('OINK FM 24.7', 40, 70);
-                    this.ctx.fillStyle = '#4ecdc4';
-                    this.ctx.font = '24px Arial';
-                    this.ctx.fillText('Hosted by Porky', 40, 110);
-                }
-                
                 // Add live crypto ticker at bottom
                 if (this.isPlaying && this.newsTicker.textContent !== 'Latest crypto intel will appear here...') {
                     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
@@ -540,12 +527,30 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                 this.currentImage = 'porky';
                 this.isTalking = true;
                 
-                // Create a fresh GIF element to restart animation
-                this.porkyGifElement = document.createElement('img');
-                this.porkyGifElement.crossOrigin = "anonymous";
-                this.porkyGifElement.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif?reload=' + Date.now();
+                // Method 1: Try creating a video element instead of img
+                const video = document.createElement('video');
+                video.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif';
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = true;
+                video.style.display = 'none';
+                document.body.appendChild(video);
                 
-                console.log('🐷 Porky GIF reloaded for animation');
+                video.onloadeddata = () => {
+                    this.porkyGifElement = video;
+                    console.log('🐷 Porky video loaded and should be animating');
+                };
+                
+                // Method 2: Fallback with timestamp
+                const img = document.createElement('img');
+                img.crossOrigin = "anonymous";
+                img.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif?cachebust=' + Math.random();
+                img.onload = () => {
+                    if (!this.porkyGifElement || this.porkyGifElement.tagName !== 'VIDEO') {
+                        this.porkyGifElement = img;
+                        console.log('🐷 Porky image loaded as fallback');
+                    }
+                };
             }
 
             showStudio() {
