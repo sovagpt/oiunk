@@ -128,6 +128,21 @@
             background: linear-gradient(45deg, #ff4757, #ff3742);
         }
 
+        .btn.breaking {
+            background: linear-gradient(45deg, #ff9500, #ff6b00);
+            animation: pulse-orange 2s infinite;
+        }
+
+        .btn.knowledge {
+            background: linear-gradient(45deg, #9c88ff, #6c63ff);
+        }
+
+        @keyframes pulse-orange {
+            0% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 149, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0); }
+        }
+
         .audio-player {
             width: 100%;
             margin: 20px 0;
@@ -147,13 +162,112 @@
             margin-bottom: 15px;
         }
 
-        .config-section input, .config-section textarea {
+        .config-section input, .config-section textarea, .config-section select {
             width: 100%;
             padding: 10px;
             border: none;
             border-radius: 5px;
             margin: 5px 0;
             background: rgba(255, 255, 255, 0.9);
+        }
+
+        .topic-section {
+            background: rgba(108, 99, 255, 0.1);
+            border: 2px solid #6c63ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .topic-section h3 {
+            color: #6c63ff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topic-input {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #6c63ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 14px;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .topic-input:focus {
+            outline: none;
+            border-color: #9c88ff;
+            box-shadow: 0 0 10px rgba(108, 99, 255, 0.3);
+        }
+
+        .topic-controls {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .topic-queue {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .topic-item {
+            background: rgba(108, 99, 255, 0.2);
+            border-left: 4px solid #6c63ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            color: #fff;
+            position: relative;
+        }
+
+        .topic-item.urgent {
+            border-left-color: #ff6b00;
+            background: rgba(255, 149, 0, 0.2);
+        }
+
+        .topic-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .topic-content {
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .topic-tags {
+            font-size: 11px;
+            color: #6c63ff;
+            margin-top: 5px;
+        }
+
+        .remove-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .remove-btn:hover {
+            background: #ff3742;
         }
 
         .news-ticker {
@@ -168,28 +282,64 @@
             overflow-y: auto;
         }
 
-        .streaming-section {
-            background: rgba(255, 0, 0, 0.1);
-            border: 2px solid #ff4757;
+        .stats-display {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            color: #fff;
+            min-width: 100px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .knowledge-section {
+            background: rgba(156, 136, 255, 0.1);
+            border: 2px solid #9c88ff;
             border-radius: 10px;
             padding: 20px;
             margin: 20px 0;
             text-align: left;
         }
 
-        .streaming-section h3 {
-            color: #ff4757;
+        .knowledge-section h3 {
+            color: #9c88ff;
             margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
-        .youtube-setup {
-            background: rgba(255, 255, 255, 0.05);
+        .knowledge-list {
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
             padding: 15px;
-            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .knowledge-item {
+            color: #fff;
+            padding: 8px;
+            margin: 5px 0;
+            border-left: 3px solid #9c88ff;
+            background: rgba(156, 136, 255, 0.1);
+            border-radius: 3px;
+            font-size: 13px;
         }
     </style>
 </head>
@@ -215,6 +365,21 @@
             🎙️ Ready to broadcast... Click Start Show!
         </div>
 
+        <div class="stats-display">
+            <div class="stat-box">
+                <div class="stat-number" id="queueCount">0</div>
+                <div class="stat-label">Topics Queued</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="memoryCount">0</div>
+                <div class="stat-label">Memory Entries</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="knowledgeCount">0</div>
+                <div class="stat-label">Knowledge Items</div>
+            </div>
+        </div>
+
         <div class="news-ticker" id="newsTicker">
             Latest crypto intel will appear here...
         </div>
@@ -223,22 +388,82 @@
             <button class="btn" onclick="startShow()">🎙️ Start Show</button>
             <button class="btn stop" onclick="stopShow()">⏹️ Stop Show</button>
             <button class="btn" onclick="skipToNext()">⏭️ Skip Segment</button>
+            <button class="btn breaking" onclick="breakingNews()">📡 Breaking News</button>
+            <button class="btn knowledge" onclick="viewKnowledge()">🧠 View Knowledge</button>
         </div>
 
         <audio class="audio-player" id="audioPlayer" controls>
             Your browser does not support the audio element.
         </audio>
 
-        <div class="streaming-section">
-            <h3>📺 YouTube Live Streaming</h3>
-            <div class="youtube-setup">
-                <p><strong>OBS Setup Instructions:</strong></p>
-                <ol style="color: #fff; margin-left: 20px;">
-                    <li>Download OBS Studio (free)</li>
-                    <li>Add Browser Source: <strong>https://oiunk.vercel.app</strong></li>
-                    <li>Set Width: 1403, Height: 992</li>
-                    <li>Connect OBS to YouTube and go live!</li>
-                </ol>
+        <div class="topic-section">
+            <h3>🎯 Topic Queue Management</h3>
+            <p style="color: #fff; margin-bottom: 10px;">
+                <strong>Curate what Porky discusses!</strong> Add topics and he'll work through them with his growing knowledge.
+            </p>
+            
+            <textarea id="topicInput" class="topic-input" 
+                      placeholder="What should Porky discuss next?
+
+Examples:
+- New Solana memecoin $BONK surging 300% 
+- Ethereum gas fees hit all-time low
+- Major whale moved 50,000 BTC to Coinbase
+- BlackRock Bitcoin ETF rumors heating up
+- Pump.fun launches new feature for creators
+- DeFi protocol launches on Base chain
+- Celebrity endorses new memecoin
+- Regulatory news from SEC about crypto"></textarea>
+            
+            <div style="display: flex; gap: 10px; margin: 10px 0;">
+                <select id="topicType" style="width: 150px;">
+                    <option value="general">General</option>
+                    <option value="breaking_news">Breaking News</option>
+                    <option value="market_analysis">Market Analysis</option>
+                    <option value="memecoin">Memecoin Focus</option>
+                    <option value="defi">DeFi Update</option>
+                    <option value="regulatory">Regulatory News</option>
+                </select>
+                
+                <select id="topicPriority" style="width: 120px;">
+                    <option value="normal">Normal</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="low">Low Priority</option>
+                </select>
+                
+                <input type="text" id="topicTags" placeholder="Tags (comma separated)" style="flex: 1;">
+            </div>
+
+            <div class="topic-controls">
+                <button class="btn" onclick="addTopic()">📝 Add to Queue</button>
+                <button class="btn breaking" onclick="addUrgentTopic()">🚨 Add Urgent</button>
+                <button class="btn stop" onclick="clearQueue()">🗑️ Clear Queue</button>
+                <button class="btn" onclick="refreshQueue()">🔄 Refresh</button>
+            </div>
+
+            <div class="topic-queue" id="topicQueue">
+                <div style="color: #999; text-align: center; padding: 20px;">
+                    No topics queued... Add some content for Porky!
+                </div>
+            </div>
+        </div>
+
+        <div class="knowledge-section">
+            <h3>🧠 Porky's Knowledge Base</h3>
+            <p style="color: #fff; margin-bottom: 10px;">
+                Porky's accumulated knowledge grows with every show. He references past topics to build ongoing narratives.
+            </p>
+            
+            <div style="display: flex; gap: 10px; margin: 10px 0;">
+                <button class="btn knowledge" onclick="viewMemory()">📚 Recent Memory</button>
+                <button class="btn knowledge" onclick="viewKnowledge()">🎓 Knowledge Base</button>
+                <button class="btn stop" onclick="clearMemory()">🧹 Clear All Data</button>
+            </div>
+
+            <div class="knowledge-list" id="knowledgeDisplay">
+                <div style="color: #999; text-align: center; padding: 20px;">
+                    Porky's knowledge base is empty... Start the show to build it!
+                </div>
             </div>
         </div>
 
@@ -266,9 +491,13 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
                 this.audioPlayer = document.getElementById('audioPlayer');
                 this.statusDisplay = document.getElementById('statusDisplay');
                 this.newsTicker = document.getElementById('newsTicker');
+                this.topicInput = document.getElementById('topicInput');
+                this.topicQueue = document.getElementById('topicQueue');
+                this.knowledgeDisplay = document.getElementById('knowledgeDisplay');
                 
                 this.setupEventListeners();
                 this.updateStatus('🐷 OINK FM loaded and ready!');
+                this.refreshData();
             }
 
             setupEventListeners() {
@@ -286,6 +515,204 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
                 this.studioImg.addEventListener('load', () => {
                     console.log('✅ Studio image loaded');
                 });
+
+                // Auto-refresh data every 30 seconds
+                setInterval(() => {
+                    if (!this.isPlaying) {
+                        this.refreshData();
+                    }
+                }, 30000);
+            }
+
+            async addTopic() {
+                const content = this.topicInput.value.trim();
+                if (!content) {
+                    this.updateStatus('❌ Please enter a topic first!');
+                    return;
+                }
+
+                const topic = {
+                    content: content,
+                    type: document.getElementById('topicType').value,
+                    priority: document.getElementById('topicPriority').value,
+                    tags: document.getElementById('topicTags').value.split(',').map(t => t.trim()).filter(t => t)
+                };
+
+                try {
+                    const response = await fetch('/api/enhanced-chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'add_topic',
+                            topic: topic
+                        })
+                    });
+
+                    if (response.ok) {
+                        this.topicInput.value = '';
+                        document.getElementById('topicTags').value = '';
+                        this.updateStatus('✅ Topic added to queue!');
+                        await this.refreshQueue();
+                    } else {
+                        throw new Error('Failed to add topic');
+                    }
+                } catch (error) {
+                    console.error('Add topic failed:', error);
+                    this.updateStatus('❌ Failed to add topic');
+                }
+            }
+
+            async addUrgentTopic() {
+                document.getElementById('topicPriority').value = 'urgent';
+                document.getElementById('topicType').value = 'breaking_news';
+                await this.addTopic();
+            }
+
+            async removeTopic(topicId) {
+                try {
+                    const response = await fetch(`/api/enhanced-chat?type=topic&id=${topicId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        this.updateStatus('✅ Topic removed');
+                        await this.refreshQueue();
+                    }
+                } catch (error) {
+                    console.error('Remove topic failed:', error);
+                    this.updateStatus('❌ Failed to remove topic');
+                }
+            }
+
+            async clearQueue() {
+                if (confirm('Clear all queued topics?')) {
+                    try {
+                        const response = await fetch('/api/enhanced-chat?type=queue', {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            this.updateStatus('✅ Queue cleared');
+                            await this.refreshQueue();
+                        }
+                    } catch (error) {
+                        console.error('Clear queue failed:', error);
+                    }
+                }
+            }
+
+            async clearMemory() {
+                if (confirm('Clear all memory and knowledge data? This cannot be undone!')) {
+                    try {
+                        const response = await fetch('/api/enhanced-chat?type=memory', {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            this.updateStatus('✅ All data cleared');
+                            await this.refreshData();
+                        }
+                    } catch (error) {
+                        console.error('Clear memory failed:', error);
+                    }
+                }
+            }
+
+            async refreshData() {
+                await Promise.all([
+                    this.refreshQueue(),
+                    this.refreshStats()
+                ]);
+            }
+
+            async refreshQueue() {
+                try {
+                    const response = await fetch('/api/enhanced-chat?type=queue');
+                    const data = await response.json();
+                    this.displayQueue(data.queue || []);
+                } catch (error) {
+                    console.error('Refresh queue failed:', error);
+                }
+            }
+
+            async refreshStats() {
+                try {
+                    const response = await fetch('/api/enhanced-chat');
+                    const data = await response.json();
+                    
+                    document.getElementById('queueCount').textContent = data.queue?.length || 0;
+                    document.getElementById('memoryCount').textContent = data.memory?.recent?.length || 0;
+                    document.getElementById('knowledgeCount').textContent = data.knowledge?.length || 0;
+                } catch (error) {
+                    console.error('Refresh stats failed:', error);
+                }
+            }
+
+            displayQueue(queue) {
+                if (queue.length === 0) {
+                    this.topicQueue.innerHTML = `
+                        <div style="color: #999; text-align: center; padding: 20px;">
+                            No topics queued... Add some content for Porky!
+                        </div>
+                    `;
+                } else {
+                    this.topicQueue.innerHTML = queue.map(topic => `
+                        <div class="topic-item ${topic.priority === 'urgent' ? 'urgent' : ''}">
+                            <div class="topic-meta">
+                                <span>${topic.type} • ${topic.priority}</span>
+                                <span>${new Date(topic.timestamp).toLocaleTimeString()}</span>
+                                <button class="remove-btn" onclick="radio.removeTopic(${topic.id})">Remove</button>
+                            </div>
+                            <div class="topic-content">${topic.content}</div>
+                            ${topic.tags && topic.tags.length > 0 ? `<div class="topic-tags">Tags: ${topic.tags.join(', ')}</div>` : ''}
+                        </div>
+                    `).join('');
+                }
+            }
+
+            async viewMemory() {
+                try {
+                    const response = await fetch('/api/enhanced-chat?type=memory');
+                    const data = await response.json();
+                    this.displayKnowledge(data.memory?.recent || [], 'Recent Memory');
+                } catch (error) {
+                    console.error('View memory failed:', error);
+                }
+            }
+
+            async viewKnowledge() {
+                try {
+                    const response = await fetch('/api/enhanced-chat?type=knowledge');
+                    const data = await response.json();
+                    this.displayKnowledge(data.knowledge || [], 'Knowledge Base');
+                } catch (error) {
+                    console.error('View knowledge failed:', error);
+                }
+            }
+
+            displayKnowledge(items, title) {
+                if (items.length === 0) {
+                    this.knowledgeDisplay.innerHTML = `
+                        <div style="color: #999; text-align: center; padding: 20px;">
+                            No ${title.toLowerCase()} entries... Start the show to build knowledge!
+                        </div>
+                    `;
+                } else {
+                    this.knowledgeDisplay.innerHTML = `
+                        <div style="color: #9c88ff; font-weight: bold; margin-bottom: 10px;">${title} (${items.length} entries)</div>
+                        ${items.map(item => `
+                            <div class="knowledge-item">
+                                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 3px;">
+                                    ${new Date(item.timestamp).toLocaleString()}
+                                </div>
+                                <div>${item.topic || item.content?.substring(0, 100) + '...' || 'Unknown'}</div>
+                                ${item.keywords ? `<div style="font-size: 11px; color: #6c63ff; margin-top: 3px;">Keywords: ${item.keywords.join(', ')}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    `;
+                }
             }
 
             async fetchCryptoNews() {
@@ -304,44 +731,97 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
             }
 
             async generateRadioContent(cryptoData) {
-    try {
-        const response = await fetch('/api/enhanced-chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                cryptoData,
-                requestType: 'segment'
-            })
-        });
+                try {
+                    const response = await fetch('/api/enhanced-chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            cryptoData,
+                            requestType: 'segment'
+                        })
+                    });
 
-        console.log('API Response status:', response.status);
-        console.log('API Response headers:', response.headers);
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('API Error Response:', errorText);
+                        throw new Error(`API Error: ${response.status}`);
+                    }
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('API Error Response:', errorText);
-            throw new Error(`API Error: ${response.status} - ${errorText}`);
-        }
+                    const data = await response.json();
+                    
+                    // Update stats after each segment
+                    await this.refreshStats();
+                    
+                    return data.content;
+                    
+                } catch (error) {
+                    console.error('Enhanced content generation failed:', error);
+                    this.updateStatus("⚠️ Enhanced API Error - using fallback");
+                    return "OINK OINK! Porky here on OINK FM! My topic queue is loaded with hot intel and my knowledge base is growing every day! The crypto markets are hog wild and we're building something special here! Let me spin some tracks while I process all this beautiful data!";
+                }
+            }
 
-        const responseText = await response.text();
-        console.log('Raw API Response:', responseText);
+            async breakingNews() {
+                const content = this.topicInput.value.trim();
+                if (!content) {
+                    this.updateStatus('❌ Enter breaking news content first!');
+                    return;
+                }
 
-        // Try to parse as JSON
-        const data = JSON.parse(responseText);
-        
-        // Log the scraped data for debugging
-        console.log('🕷️ Web scraping results:', data.metadata);
-        
-        return data.content;
-        
-    } catch (error) {
-        console.error('Enhanced content generation failed:', error);
-        this.updateStatus("⚠️ Enhanced API Error - using fallback");
-        return "OINK OINK! Porky here on OINK FM! Something's funky with my intel network but the crypto markets are still hog wild! Let me spin some tracks while I fix my connections!";
-    }
-}
+                try {
+                    this.updateStatus('🚨 BREAKING: Porky received urgent intel!');
+                    
+                    const radioScript = await this.generateBreakingNewsContent(content);
+                    
+                    // Clear the input
+                    this.topicInput.value = '';
+                    
+                    // Show Porky talking
+                    this.showPorkyTalking();
+                    this.updateStatus('🎙️ Porky: BREAKING NEWS ALERT!');
+                    
+                    // Speak the content
+                    await this.textToSpeech(radioScript);
+                    
+                    // Return to studio
+                    this.showStudio();
+                    this.updateStatus('📻 Breaking news delivered!');
+                    
+                } catch (error) {
+                    console.error('Breaking news failed:', error);
+                    this.updateStatus('❌ Breaking news system malfunction!');
+                }
+            }
+
+            async generateBreakingNewsContent(intel) {
+                try {
+                    const response = await fetch('/api/enhanced-chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            cryptoData: await this.fetchCryptoNews(),
+                            requestType: 'breaking_news',
+                            fieldIntel: intel
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    await this.refreshStats();
+                    return data.content;
+                    
+                } catch (error) {
+                    console.error('Breaking news generation failed:', error);
+                    return `OINK OINK! This is Porky with URGENT intel! ${intel} This is absolutely mental! My knowledge base is telling me this could be huge! More details coming as this develops!`;
+                }
+            }
 
             async textToSpeech(text) {
                 return new Promise((resolve) => {
@@ -391,13 +871,13 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
                             // Update news ticker
                             this.updateNewsTicker(cryptoData);
                             
-                            // Generate radio content
-                            this.updateStatus("🤖 Porky is cooking up some hot takes...");
+                            // Generate radio content (will use queue topics automatically)
+                            this.updateStatus("🤖 Porky is accessing his knowledge base...");
                             const radioScript = await this.generateRadioContent(cryptoData);
                             
                             // Show Porky talking (video plays automatically)
                             this.showPorkyTalking();
-                            this.updateStatus("🎙️ Porky is dropping knowledge...");
+                            this.updateStatus("🎙️ Porky is sharing his accumulated wisdom...");
                             
                             // Speak the content
                             await this.textToSpeech(radioScript);
@@ -442,7 +922,7 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
             showPorkyTalking() {
                 this.studioImg.classList.remove('visible');
                 this.porkyVideo.classList.add('visible');
-                this.porkyVideo.currentTime = 0; // Restart video
+                this.porkyVideo.currentTime = 0;
                 this.porkyVideo.play();
                 console.log('🐷 Showing Porky video - should be animating!');
             }
@@ -462,7 +942,7 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
             updateNewsTicker(data) {
                 if (Array.isArray(data)) {
                     const tickerText = data.map(coin => 
-                        `${coin.name}: $${coin.current_price.toFixed(2)} (${coin.price_change_percentage_24h > 0 ? '+' : ''}${coin.price_change_percentage_24h.toFixed(1)}%)`
+                        `${coin.name}: ${coin.current_price.toFixed(2)} (${coin.price_change_percentage_24h > 0 ? '+' : ''}${coin.price_change_percentage_24h.toFixed(1)}%)`
                     ).join(' • ');
                     this.newsTicker.textContent = tickerText;
                 } else {
@@ -482,7 +962,7 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
                         resolve();
                     });
                     
-                    const timeout = setTimeout(resolve, 180000); // Max 3 minutes
+                    const timeout = setTimeout(resolve, 180000);
                     this.audioPlayer.onended = () => {
                         clearTimeout(timeout);
                         resolve();
@@ -513,6 +993,38 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
 
         function skipToNext() {
             radio.skipToNext();
+        }
+
+        function addTopic() {
+            radio.addTopic();
+        }
+
+        function addUrgentTopic() {
+            radio.addUrgentTopic();
+        }
+
+        function clearQueue() {
+            radio.clearQueue();
+        }
+
+        function clearMemory() {
+            radio.clearMemory();
+        }
+
+        function refreshQueue() {
+            radio.refreshQueue();
+        }
+
+        function viewMemory() {
+            radio.viewMemory();
+        }
+
+        function viewKnowledge() {
+            radio.viewKnowledge();
+        }
+
+        function breakingNews() {
+            radio.breakingNews();
         }
 
         // Load voices when available
