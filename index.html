@@ -60,7 +60,7 @@
             background: #000;
         }
 
-        .studio-img, .porky-video {
+        .studio-img, .porky-gif {
             position: absolute;
             top: 0;
             left: 0;
@@ -69,7 +69,7 @@
             object-fit: cover;
         }
 
-        .porky-video {
+        .porky-gif {
             display: none;
         }
 
@@ -77,7 +77,7 @@
             display: block;
         }
 
-        .porky-video.visible {
+        .porky-gif.visible {
             display: block;
         }
 
@@ -104,8 +104,7 @@
             height: 100%;
             object-fit: contain;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.4);
-            border: 3px solid #ff1493;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
 
         /* Perky Reporter Badge */
@@ -455,11 +454,10 @@
                  src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/studio.jpg" 
                  alt="Studio">
             
-            <!-- Porky Video -->
-            <video id="porkyVideo" class="porky-video" 
-                   autoplay loop muted playsinline>
-                <source src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.mp4" type="video/mp4">
-            </video>
+            <!-- Porky GIF -->
+            <img id="porkyGif" class="porky-gif" 
+                 src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif" 
+                 alt="Porky">
 
             <!-- Perky Reporter -->
             <div id="perkyReporter" class="perky-reporter">
@@ -607,7 +605,7 @@ Loading music library from GitHub...
                 
                 // DOM elements
                 this.studioImg = document.getElementById('studioImg');
-                this.porkyVideo = document.getElementById('porkyVideo');
+                this.porkyGif = document.getElementById('porkyGif');
                 this.perkyReporter = document.getElementById('perkyReporter');
                 this.audioPlayer = document.getElementById('audioPlayer');
                 this.statusDisplay = document.getElementById('statusDisplay');
