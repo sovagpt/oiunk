@@ -1143,6 +1143,88 @@ Loading music library from GitHub...
                 }
             }
 
+            async textToSpeech(text, voiceType = 'porky') {
+                try {
+                    // Use different voice IDs for Porky and Perky
+                    const voiceId = voiceType === 'perky' ? '19STyYD15bswVz51nqLf' : 'porky';
+                    
+                    const response = await fetch('/api/tts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            text: text,
+                            voice: voiceId
+                        })
+                    });
+
+                    if (response.ok) {
+                        const audioBlob = await response.blob();
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        
+                        return new Promise((resolve) => {
+                            const audio = new Audio(audioUrl);
+                            audio.onended = () => {
+                                URL.revokeObjectURL(audioUrl);
+                                resolve();
+                            };
+                            audio.onerror = () => {
+                                console.error('ElevenLabs audio playback failed');
+                                resolve();
+                            };
+                            audio.play();
+                        });
+                    } else {
+                        throw new Error('ElevenLabs TTS failed');
+                    }
+                } catch (error) {
+                    console.error('ElevenLabs TTS error, falling back to browser TTS:', error);
+                    
+                    // Fallback to browser TTS
+                    return new Promise((resolve) => {
+                        if ('speechSynthesis' in window) {
+                            const utterance = new SpeechSynthesisUtterance(text);
+                            utterance.rate = voiceType === 'perky' ? 1.0 : 0.9;
+                            utterance.pitch = voiceType === 'perky' ? 1.3 : 1.1;
+                            utterance.volume = 0.8;
+                            
+                            const voices = speechSynthesis.getVoices();
+                            let preferredVoice;
+                            
+                            if (voiceType === 'perky') {
+                                // Try to find a female voice for Perky
+                                preferredVoice = voices.find(voice => 
+                                    voice.name.toLowerCase().includes('female') || 
+                                    voice.name.toLowerCase().includes('woman') ||
+                                    voice.name.includes('Zira') ||
+                                    voice.name.includes('Hazel')
+                                );
+                            }
+                            
+                            if (!preferredVoice) {
+                                preferredVoice = voices.find(voice => 
+                                    voice.name.includes('Google') || 
+                                    voice.name.includes('Microsoft') ||
+                                    voice.lang.includes('en-US')
+                                );
+                            }
+                            
+                            if (preferredVoice) {
+                                utterance.voice = preferredVoice;
+                            }
+                            
+                            utterance.onend = resolve;
+                            utterance.onerror = resolve;
+                            
+                            speechSynthesis.speak(utterance);
+                        } else {
+                            setTimeout(resolve, text.length * 50);
+                        }
+                    });
+                }
+            }
+
             async generateTTSAudio(text, voiceType = 'porky') {
                 try {
                     const voiceId = voiceType === 'perky' ? '19STyYD15bswVz51nqLf' : 'porky';
@@ -1306,6 +1388,7 @@ Loading music library from GitHub...
                 if (this.isPlaying) return;
                 
                 this.isPlaying = true;
+                this.justCompletedReport = false;
                 this.updateStatus("🎙️ OINK FM is going LIVE!");
                 
                 // Check for queued topics that need specific handling
@@ -1324,6 +1407,19 @@ Loading music library from GitHub...
                 
                 while (this.isPlaying) {
                     try {
+                        // Check if we just completed a report and should go straight to music
+                        if (this.justCompletedReport) {
+                            this.justCompletedReport = false;
+                            this.updateStatus("🎵 Post-report music time...");
+                            await this.playRandomSong();
+                            
+                            // After music, continue with normal flow
+                            if (this.isPlaying) {
+                                await this.delay(2000);
+                            }
+                            continue;
+                        }
+                        
                         // Check for priority Perky reports or urgent topics
                         const urgentPerkyReport = queuedTopics.find(topic => 
                             topic.type === 'perky_report' || 
@@ -1342,10 +1438,10 @@ Loading music library from GitHub...
                             const refreshData = await refreshResponse.json();
                             queuedTopics = refreshData.queue || [];
                             
-                            continue;
+                            continue; // This will check justCompletedReport flag
                         }
                         
-                        // Regular segment handling
+                        // Regular segment handling with pre-generated TTS
                         if (!nextRadioScript) {
                             nextCryptoData = await this.fetchCryptoNews();
                             if (nextCryptoData) {
@@ -1365,13 +1461,14 @@ Loading music library from GitHub...
                             }
                         }
                         
-                        // Use the pre-generated content immediately
+                        // Generate TTS while showing Porky animation
                         if (nextRadioScript) {
                             this.showPorkyTalking();
                             this.updateStatus("🎙️ Porky is dropping knowledge...");
                             
-                            // Speak the content
-                            await this.textToSpeech(nextRadioScript, 'porky');
+                            // Generate and play TTS
+                            const audioUrl = await this.generateTTSAudio(nextRadioScript, 'porky');
+                            await this.playAudio(audioUrl);
                             
                             // Clear used content
                             nextRadioScript = null;
@@ -1624,6 +1721,10 @@ Loading music library from GitHub...
 
         function addUrgentTopic() {
             radio.addUrgentTopic();
+        }
+
+        function addPerkyReport() {
+            radio.addPerkyReport();
         }
 
         function addPerkyReport() {
