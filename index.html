@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIF Animation Test</title>
+    <title>Video Approach Test</title>
     <style>
         body {
             background: #333;
@@ -13,9 +13,26 @@
             padding: 20px;
         }
         
-        #testCanvas {
+        .container {
+            position: relative;
+            width: 1403px;
+            height: 992px;
+            margin: 0 auto;
             border: 2px solid #fff;
-            margin: 20px;
+            background: #000;
+        }
+        
+        .studio-img, .porky-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .porky-video {
+            display: none;
         }
         
         button {
@@ -40,106 +57,121 @@
             margin: 20px;
             font-family: monospace;
         }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .visible {
+            display: block !important;
+        }
     </style>
 </head>
 <body>
-    <h1>🐷 Porky GIF Animation Test</h1>
+    <h1>🐷 Video Element Approach Test</h1>
     
-    <div class="status" id="status">Ready to test GIF animation...</div>
+    <div class="status" id="status">Testing video element approach...</div>
     
-    <canvas id="testCanvas" width="1403" height="992"></canvas>
+    <div class="container">
+        <!-- Studio Image -->
+        <img id="studioImg" class="studio-img visible" 
+             src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/studio.jpg" 
+             alt="Studio">
+        
+        <!-- Porky Video (MP4) -->
+        <video id="porkyVideo" class="porky-video hidden" 
+               autoplay loop muted playsinline>
+            <source src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/music/porky.mp4" type="video/mp4">
+        </video>
+        
+        <!-- Alternative: Direct GIF element -->
+        <img id="porkyGif" class="porky-video hidden"
+             src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif"
+             alt="Porky Talking">
+    </div>
     
     <div>
-        <button onclick="showStudio()">Show Studio Image</button>
-        <button onclick="showPorky()">Show Porky GIF</button>
-        <button onclick="toggleAuto()">Toggle Auto Switch</button>
+        <button onclick="showStudio()">Show Studio</button>
+        <button onclick="showPorkyVideo()">Show Porky (Video)</button>
+        <button onclick="showPorkyGif()">Show Porky (GIF)</button>
+        <button onclick="testDirectVideo()">Test Direct MP4</button>
     </div>
     
     <div class="status">
-        <strong>Test Steps:</strong><br>
-        1. Click "Show Studio Image" - should show static studio<br>
-        2. Click "Show Porky GIF" - should show ANIMATED Porky<br>
-        3. If GIF doesn't animate, we'll try different methods
+        <strong>Testing different methods:</strong><br>
+        1. Video element with GIF source<br>
+        2. Direct IMG element with GIF<br>
+        3. Check if GIF loads at all
+    </div>
+    
+    <!-- Test area for direct video -->
+    <div style="margin-top: 20px;">
+        <h3>Direct MP4 Test (should play here):</h3>
+        <video controls autoplay loop muted style="max-width: 300px; border: 1px solid white;">
+            <source src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/music/porky.mp4" type="video/mp4">
+        </video>
     </div>
 
     <script>
-        class GifTester {
+        class VideoTester {
             constructor() {
-                this.canvas = document.getElementById('testCanvas');
-                this.ctx = this.canvas.getContext('2d');
                 this.status = document.getElementById('status');
+                this.studioImg = document.getElementById('studioImg');
+                this.porkyVideo = document.getElementById('porkyVideo');
+                this.porkyGif = document.getElementById('porkyGif');
+                this.directGif = document.getElementById('directGif');
                 
-                this.currentView = 'studio';
-                this.autoSwitch = false;
-                
-                // Load images
-                this.studioImg = new Image();
-                this.porkyImg = new Image();
-                
-                this.studioImg.onload = () => this.updateStatus('✅ Studio image loaded');
-                this.porkyImg.onload = () => this.updateStatus('✅ Porky GIF loaded');
-                
-                this.studioImg.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/studio.jpg';
-                this.porkyImg.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif';
-                
-                // Start animation loop
-                this.animate();
-                
-                this.updateStatus('Loading images...');
+                this.setupEventListeners();
+                this.updateStatus('Loaded - testing different approaches');
             }
             
-            animate() {
-                // Clear canvas
-                this.ctx.clearRect(0, 0, 1403, 992);
+            setupEventListeners() {
+                this.studioImg.onload = () => this.updateStatus('✅ Studio image loaded');
+                this.studioImg.onerror = () => this.updateStatus('❌ Studio image failed');
                 
-                if (this.currentView === 'studio' && this.studioImg.complete) {
-                    this.ctx.drawImage(this.studioImg, 0, 0, 1403, 992);
-                } else if (this.currentView === 'porky' && this.porkyImg.complete) {
-                    // This should animate the GIF
-                    this.ctx.drawImage(this.porkyImg, 0, 0, 1403, 992);
-                } else {
-                    // Fallback
-                    this.ctx.fillStyle = '#667eea';
-                    this.ctx.fillRect(0, 0, 1403, 992);
-                    this.ctx.fillStyle = 'white';
-                    this.ctx.font = '48px Arial';
-                    this.ctx.textAlign = 'center';
-                    this.ctx.fillText('Loading...', 701, 496);
-                }
+                this.porkyVideo.onloadeddata = () => this.updateStatus('✅ Porky video loaded');
+                this.porkyVideo.onerror = () => this.updateStatus('❌ Porky video failed');
                 
-                requestAnimationFrame(() => this.animate());
+                this.porkyGif.onload = () => this.updateStatus('✅ Porky GIF (img) loaded');
+                this.porkyGif.onerror = () => this.updateStatus('❌ Porky GIF (img) failed');
+                
+                this.directGif.onload = () => this.updateStatus('✅ Direct GIF loaded - check if it animates below');
+                this.directGif.onerror = () => this.updateStatus('❌ Direct GIF failed to load');
+            }
+            
+            hideAll() {
+                this.studioImg.classList.add('hidden');
+                this.porkyVideo.classList.add('hidden');
+                this.porkyGif.classList.add('hidden');
             }
             
             showStudio() {
-                this.currentView = 'studio';
+                this.hideAll();
+                this.studioImg.classList.remove('hidden');
+                this.studioImg.classList.add('visible');
                 this.updateStatus('📸 Showing studio image');
             }
             
-            showPorky() {
-                this.currentView = 'porky';
-                this.updateStatus('🐷 Showing Porky GIF - should be animating!');
+            showPorkyVideo() {
+                this.hideAll();
+                this.porkyVideo.classList.remove('hidden');
+                this.porkyVideo.classList.add('visible');
+                this.porkyVideo.play();
+                this.updateStatus('🎬 Showing Porky as video element');
             }
             
-            toggleAutoSwitch() {
-                this.autoSwitch = !this.autoSwitch;
-                if (this.autoSwitch) {
-                    this.updateStatus('🔄 Auto-switching every 3 seconds');
-                    this.startAutoSwitch();
-                } else {
-                    this.updateStatus('⏹️ Auto-switch stopped');
-                }
+            showPorkyGif() {
+                this.hideAll();
+                this.porkyGif.classList.remove('hidden');
+                this.porkyGif.classList.add('visible');
+                this.updateStatus('🐷 Showing Porky as IMG element');
             }
             
-            startAutoSwitch() {
-                if (!this.autoSwitch) return;
-                
-                setTimeout(() => {
-                    if (this.autoSwitch) {
-                        this.currentView = this.currentView === 'studio' ? 'porky' : 'studio';
-                        this.updateStatus(`🔄 Auto-switched to ${this.currentView}`);
-                        this.startAutoSwitch();
-                    }
-                }, 3000);
+            testDirectVideo() {
+                this.updateStatus('🎬 Check the direct MP4 at bottom - does it play?');
+                const video = document.querySelector('video[controls]');
+                video.currentTime = 0;
+                video.play();
             }
             
             updateStatus(message) {
@@ -149,19 +181,23 @@
         }
         
         // Initialize
-        const tester = new GifTester();
+        const tester = new VideoTester();
         
         // Global functions for buttons
         function showStudio() {
             tester.showStudio();
         }
         
-        function showPorky() {
-            tester.showPorky();
+        function showPorkyVideo() {
+            tester.showPorkyVideo();
         }
         
-        function toggleAuto() {
-            tester.toggleAutoSwitch();
+        function showPorkyGif() {
+            tester.showPorkyGif();
+        }
+        
+        function testDirectVideo() {
+            tester.testDirectVideo();
         }
     </script>
 </body>
