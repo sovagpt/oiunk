@@ -914,51 +914,94 @@ Loading music library from GitHub...
             }
 
             async startShow() {
-                if (this.isPlaying) return;
-                
-                this.isPlaying = true;
-                this.updateStatus("🎙️ OINK FM is going LIVE!");
-                
-                while (this.isPlaying) {
-                    try {
-                        // Fetch crypto data
-                        const cryptoData = await this.fetchCryptoNews();
-                        
-                        if (cryptoData) {
-                            // Update news ticker
-                            this.updateNewsTicker(cryptoData);
-                            
-                            // Generate radio content (will use queue topics automatically)
-                            this.updateStatus("🤖 Porky is accessing his knowledge base...");
-                            const radioScript = await this.generateRadioContent(cryptoData);
-                            
-                            // Show Porky talking (video plays automatically)
-                            this.showPorkyTalking();
-                            this.updateStatus("🎙️ Porky is sharing his accumulated wisdom...");
-                            
-                            // Speak the content
-                            await this.textToSpeech(radioScript);
-                            
-                            // Switch to studio view
-                            this.showStudio();
-                            this.updateStatus("🎵 Now spinning tracks...");
-                            
-                            // Play random song
-                            await this.playRandomSong();
-                        }
-                        
-                        // Wait before next segment
-                        if (this.isPlaying) {
-                            await this.delay(10000);
-                        }
-                        
-                    } catch (error) {
-                        console.error('Error in show loop:', error);
-                        this.updateStatus("❌ Something went wrong, retrying...");
-                        await this.delay(30000);
-                    }
+    if (this.isPlaying) return;
+    
+    this.isPlaying = true;
+    this.updateStatus("🎙️ OINK FM is going LIVE!");
+    
+    // Pre-generate first segment
+    let nextRadioScript = null;
+    let nextCryptoData = null;
+    
+    while (this.isPlaying) {
+        try {
+            // If we don't have pre-generated content, generate it now
+            if (!nextRadioScript) {
+                nextCryptoData = await this.fetchCryptoNews();
+                if (nextCryptoData) {
+                    this.updateNewsTicker(nextCryptoData);
+                    this.updateStatus("🤖 Porky is preparing his thoughts...");
+                    nextRadioScript = await this.generateRadioContent(nextCryptoData);
                 }
             }
+            
+            // Use the pre-generated content immediately
+            if (nextRadioScript) {
+                this.showPorkyTalking();
+                this.updateStatus("🎙️ Porky is dropping knowledge...");
+                
+                // Speak the content (no delay!)
+                await this.textToSpeech(nextRadioScript);
+                
+                // Clear used content
+                nextRadioScript = null;
+                nextCryptoData = null;
+            }
+            
+            // Switch to studio view for music
+            this.showStudio();
+            this.updateStatus("🎵 Now spinning tracks...");
+            
+            // Start background content generation WHILE music plays
+            const backgroundGeneration = this.generateNextSegment();
+            
+            // Play music
+            await this.playRandomSong();
+            
+            // Get the pre-generated content (should be ready by now)
+            try {
+                const result = await backgroundGeneration;
+                nextRadioScript = result.content;
+                nextCryptoData = result.cryptoData;
+                console.log("✅ Next segment ready! No delay for next speech.");
+            } catch (error) {
+                console.error("Background generation failed:", error);
+                // Will generate live if needed
+            }
+            
+            // Small pause between segments
+            if (this.isPlaying) {
+                await this.delay(2000); // Just 2 seconds
+            }
+            
+        } catch (error) {
+            console.error('Error in show loop:', error);
+            this.updateStatus("❌ Something went wrong, retrying...");
+            await this.delay(30000);
+        }
+    }
+}
+
+// Add this new function for background generation
+async generateNextSegment() {
+    try {
+        console.log("🔄 Generating next segment in background...");
+        
+        const cryptoData = await this.fetchCryptoNews();
+        if (!cryptoData) {
+            throw new Error("Failed to fetch crypto data");
+        }
+        
+        const content = await this.generateRadioContent(cryptoData);
+        
+        console.log("✅ Background generation complete!");
+        return { content, cryptoData };
+        
+    } catch (error) {
+        console.error("Background generation error:", error);
+        throw error;
+    }
+}
 
             async playRandomSong() {
                 if (this.songs.length === 0) {
