@@ -886,32 +886,69 @@ Loading music library from GitHub...
             }
 
             async textToSpeech(text) {
-                return new Promise((resolve) => {
-                    if ('speechSynthesis' in window) {
-                        const utterance = new SpeechSynthesisUtterance(text);
-                        utterance.rate = 0.9;
-                        utterance.pitch = 1.1;
-                        utterance.volume = 0.8;
-                        
-                        const voices = speechSynthesis.getVoices();
-                        const preferredVoice = voices.find(voice => 
-                            voice.name.includes('Google') || 
-                            voice.name.includes('Microsoft') ||
-                            voice.lang.includes('en-US')
-                        );
-                        if (preferredVoice) {
-                            utterance.voice = preferredVoice;
-                        }
-                        
-                        utterance.onend = resolve;
-                        utterance.onerror = resolve;
-                        
-                        speechSynthesis.speak(utterance);
-                    } else {
-                        setTimeout(resolve, text.length * 50);
-                    }
-                });
+    try {
+        // Try ElevenLabs first
+        const response = await fetch('/api/tts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                text: text,
+                voice: 'porky' // We'll set up a custom voice
+            })
+        });
+
+        if (response.ok) {
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            return new Promise((resolve) => {
+                const audio = new Audio(audioUrl);
+                audio.onended = () => {
+                    URL.revokeObjectURL(audioUrl); // Clean up
+                    resolve();
+                };
+                audio.onerror = () => {
+                    console.error('ElevenLabs audio playback failed');
+                    resolve();
+                };
+                audio.play();
+            });
+        } else {
+            throw new Error('ElevenLabs TTS failed');
+        }
+    } catch (error) {
+        console.error('ElevenLabs TTS error, falling back to browser TTS:', error);
+        
+        // Fallback to browser TTS
+        return new Promise((resolve) => {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                utterance.volume = 0.8;
+                
+                const voices = speechSynthesis.getVoices();
+                const preferredVoice = voices.find(voice => 
+                    voice.name.includes('Google') || 
+                    voice.name.includes('Microsoft') ||
+                    voice.lang.includes('en-US')
+                );
+                if (preferredVoice) {
+                    utterance.voice = preferredVoice;
+                }
+                
+                utterance.onend = resolve;
+                utterance.onerror = resolve;
+                
+                speechSynthesis.speak(utterance);
+            } else {
+                setTimeout(resolve, text.length * 50);
             }
+        });
+    }
+}
 
             async startShow() {
     if (this.isPlaying) return;
