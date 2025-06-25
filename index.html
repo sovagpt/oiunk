@@ -478,12 +478,9 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
     <script>
         class OinkFMRadio {
             constructor() {
-                this.isPlaying = false;
-                this.currentSegment = null;
-                this.songs = [
-                    'https://www.soundjay.com/misc/sounds/beep-07a.wav',
-                    'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3'
-                ];
+    this.isPlaying = false;
+    this.currentSegment = null;
+    this.songs = [];
                 
                 // DOM elements
                 this.studioImg = document.getElementById('studioImg');
@@ -949,6 +946,36 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
                     this.newsTicker.textContent = data;
                 }
             }
+
+            async loadMusicLibrary() {
+    console.log('🎵 Loading music library from GitHub...');
+    this.updateStatus('🎵 Scanning GitHub for music files...');
+    
+    const musicUrls = [];
+    
+    // Generate URLs for your songs (track001.mp3 to track050.mp3)
+    for (let i = 1; i <= 50; i++) {
+        const trackNumber = i.toString().padStart(3, '0');
+        musicUrls.push(`https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/music/track${trackNumber}.mp3`);
+    }
+    
+    // Test which songs exist
+    const validSongs = [];
+    for (const url of musicUrls) {
+        try {
+            const response = await fetch(url, { method: 'HEAD' });
+            if (response.ok) {
+                validSongs.push(url);
+                console.log(`✅ Found: ${url.split('/').pop()}`);
+            }
+        } catch (error) {
+            // Song doesn't exist, skip
+        }
+    }
+    
+    this.songs = validSongs;
+    this.updateStatus(`🎵 Music library loaded: ${validSongs.length} songs ready!`);
+}
 
             async playRandomSong() {
                 if (this.songs.length === 0) return;
