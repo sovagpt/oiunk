@@ -459,9 +459,13 @@ AVOID REPEATING: ${memory.recentTopics.join(', ')}
 // Memory functions (same as before but simplified)
 async function getMemoryData() {
   try {
-    const { kv } = await import('@vercel/kv');
-    const recent = await kv.lrange('porky:memory', 0, 9);
-    const recentTopics = await kv.smembers('porky:recent_topics');
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+    
+    const recent = await redis.lrange('porky:memory', 0, 9);
+    const recentTopics = await redis.smembers('porky:recent_topics');
     
     return {
       recent: recent.map(item => JSON.parse(item)),
@@ -475,14 +479,17 @@ async function getMemoryData() {
 
 async function storeMemory(memoryItem) {
   try {
-    const { kv } = await import('@vercel/kv');
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
     
-    await kv.lpush('porky:memory', JSON.stringify(memoryItem));
-    await kv.ltrim('porky:memory', 0, 9);
+    await redis.lpush('porky:memory', JSON.stringify(memoryItem));
+    await redis.ltrim('porky:memory', 0, 9);
     
     for (const topic of memoryItem.topics) {
-      await kv.sadd('porky:recent_topics', topic);
-      await kv.expire('porky:recent_topics', 7200);
+      await redis.sadd('porky:recent_topics', topic);
+      await redis.expire('porky:recent_topics', 7200);
     }
     
     console.log('✅ Memory stored successfully');
