@@ -22,46 +22,49 @@ export default async function handler(req, res) {
 }
 
 async function handleChatGeneration(req, res) {
-  try {
-    const { cryptoData, requestType = 'segment' } = req.body;
-    
-    console.log('🎙️ Generating enhanced content...');
-    
-    // Get memory and fresh web data
-    const memory = await getMemoryData();
-    const webData = await scrapeWebData();
-    
-    // Generate contextual content
-    const content = await generateEnhancedContent({
-      cryptoData,
-      memory,
-      webData,
-      requestType
-    });
-    
-    // Store what Porky talked about
-    await storeMemory({
-      timestamp: Date.now(),
-      content,
-      topics: extractTopics(content),
-      cryptoPrices: cryptoData,
-      webData: webData.summary,
-      type: requestType
-    });
-    
-    res.status(200).json({ 
-      content,
-      metadata: {
-        pumpFunData: webData.pumpFun,
-        cryptoNews: webData.news,
-        memoryContext: memory.recent
-      }
-    });
-    
-  } catch (error) {
-    console.error('Enhanced chat error:', error);
-    res.status(500).json({ error: 'Failed to generate enhanced content' });
-  }
+ try {
+   const { cryptoData, requestType = 'segment' } = req.body;
+   
+   console.log('🎙️ Generating enhanced content...');
+   
+   // Clear corrupted memory (remove this line after first successful run)
+   await clearMemory();
+   
+   // Get memory and fresh web data
+   const memory = await getMemoryData();
+   const webData = await scrapeWebData();
+   
+   // Generate contextual content
+   const content = await generateEnhancedContent({
+     cryptoData,
+     memory,
+     webData,
+     requestType
+   });
+   
+   // Store what Porky talked about
+   await storeMemory({
+     timestamp: Date.now(),
+     content,
+     topics: extractTopics(content),
+     cryptoPrices: cryptoData,
+     webData: webData.summary,
+     type: requestType
+   });
+   
+   res.status(200).json({ 
+     content,
+     metadata: {
+       pumpFunData: webData.pumpFun,
+       cryptoNews: webData.news,
+       memoryContext: memory.recent
+     }
+   });
+   
+ } catch (error) {
+   console.error('Enhanced chat error:', error);
+   res.status(500).json({ error: 'Failed to generate enhanced content' });
+ }
 }
 
 async function scrapeWebData() {
@@ -562,22 +565,6 @@ async function storeMemory(memoryItem) {
     console.log('✅ Memory stored successfully');
   } catch (error) {
     console.log('Memory storage failed:', error.message);
-  }
-}
-
-async function clearMemory() {
-  try {
-    const { Redis } = await import('@upstash/redis');
-    const redis = new Redis({
-      url: process.env.KV_REST_API_URL,
-      token: process.env.KV_REST_API_TOKEN,
-    });
-    
-    await redis.del('porky:memory');
-    await redis.del('porky:recent_topics');
-    console.log('🧹 Memory cleared');
-  } catch (error) {
-    console.log('Clear memory failed:', error.message);
   }
 }
 
