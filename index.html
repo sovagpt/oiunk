@@ -978,33 +978,51 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
 }
 
             async playRandomSong() {
-                if (this.songs.length === 0) return;
-                
-                const randomSong = this.songs[Math.floor(Math.random() * this.songs.length)];
-                
-                return new Promise((resolve) => {
-                    this.audioPlayer.src = randomSong;
-                    this.audioPlayer.play().catch(e => {
-                        console.error('Error playing song:', e);
-                        resolve();
-                    });
-                    
-                    const timeout = setTimeout(resolve, 180000);
-                    this.audioPlayer.onended = () => {
-                        clearTimeout(timeout);
-                        resolve();
-                    };
-                    this.audioPlayer.onerror = () => {
-                        clearTimeout(timeout);
-                        resolve();
-                    };
-                });
-            }
-
-            delay(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
-            }
-        }
+    if (this.songs.length === 0) return;
+    
+    const randomSong = this.songs[Math.floor(Math.random() * this.songs.length)];
+    
+    // Debug: Log the URL being used
+    console.log(`🎵 Trying to play: ${randomSong}`);
+    
+    // Test if the URL is actually accessible
+    try {
+        const testResponse = await fetch(randomSong, { method: 'HEAD' });
+        console.log(`🔍 URL test result: ${testResponse.status} - ${testResponse.ok ? 'OK' : 'Failed'}`);
+    } catch (error) {
+        console.error(`❌ URL test failed:`, error);
+    }
+    
+    return new Promise((resolve) => {
+        // Add more detailed error logging
+        this.audioPlayer.onerror = (error) => {
+            console.error(`❌ Audio player error:`, error);
+            console.error(`❌ Failed URL: ${randomSong}`);
+            console.error(`❌ Audio player error code:`, this.audioPlayer.error?.code);
+            resolve();
+        };
+        
+        this.audioPlayer.onloadstart = () => {
+            console.log(`🎵 Started loading: ${randomSong.split('/').pop()}`);
+        };
+        
+        this.audioPlayer.oncanplay = () => {
+            console.log(`✅ Can play: ${randomSong.split('/').pop()}`);
+        };
+        
+        this.audioPlayer.src = randomSong;
+        this.audioPlayer.play().catch(e => {
+            console.error('Play error:', e);
+            resolve();
+        });
+        
+        const timeout = setTimeout(resolve, 180000);
+        this.audioPlayer.onended = () => {
+            clearTimeout(timeout);
+            resolve();
+        };
+    });
+}
 
         // Initialize the radio
         const radio = new OinkFMRadio();
