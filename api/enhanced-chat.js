@@ -1,4 +1,4 @@
-// Enhanced OINK FM with Web Scraping
+// Enhanced OINK FM with Web Scraping and Redis Memory
 // api/enhanced-chat.js
 
 export default async function handler(req, res) {
@@ -108,6 +108,8 @@ async function scrapePumpFun() {
     const trending = extractTrendingTokens(html);
     const recentLaunches = extractRecentLaunches(html);
     
+    console.log(`Found ${tokens.length} tokens on pump.fun`);
+    
     return {
       tokens: tokens.slice(0, 5),
       trending: trending.slice(0, 3),
@@ -146,6 +148,7 @@ async function scrapeCryptoNews() {
           const html = await response.text();
           const headlines = extractNewsHeadlines(html, source);
           newsItems.push(...headlines);
+          console.log(`Found ${headlines.length} headlines from ${source}`);
         }
       } catch (error) {
         console.log(`Failed to scrape ${source}:`, error.message);
@@ -190,6 +193,7 @@ async function scrapeCryptoSocial() {
             url: `https://reddit.com${child.data.permalink}`
           }));
           socialData.push(...posts);
+          console.log(`Found ${posts.length} posts from r/${posts[0]?.subreddit || 'unknown'}`);
         }
       } catch (error) {
         console.log(`Failed to scrape ${source}:`, error.message);
@@ -217,7 +221,7 @@ function extractPumpFunTokens(html) {
   const nameRegex = /[A-Z]{3,10}/g;
   
   let match;
-  while ((match = tokenRegex.exec(html)) !== null) {
+  while ((match = tokenRegex.exec(html)) !== null && tokens.length < 20) {
     const tokenText = match[1];
     const names = tokenText.match(nameRegex);
     const prices = tokenText.match(priceRegex);
@@ -231,37 +235,61 @@ function extractPumpFunTokens(html) {
     }
   }
   
+  // Alternative patterns for pump.fun
+  const altRegex = /"symbol":"([A-Z]{3,10})"/g;
+  while ((match = altRegex.exec(html)) !== null && tokens.length < 20) {
+    tokens.push({
+      name: match[1],
+      price: 'N/A',
+      text: `Token: ${match[1]}`
+    });
+  }
+  
   return tokens;
 }
 
 function extractTrendingTokens(html) {
-  // Look for trending sections
-  const trendingRegex = /trending[^>]*>([^<]*)</gi;
   const trending = [];
   
-  let match;
-  while ((match = trendingRegex.exec(html)) !== null && trending.length < 5) {
-    const text = match[1].trim();
-    if (text && text.length > 2) {
-      trending.push({ name: text, category: 'trending' });
+  // Look for trending sections
+  const patterns = [
+    /trending[^>]*>([^<]*)</gi,
+    /"trending":\s*\[([^\]]*)\]/gi,
+    /popular[^>]*>([^<]*)</gi
+  ];
+  
+  patterns.forEach(pattern => {
+    let match;
+    while ((match = pattern.exec(html)) !== null && trending.length < 5) {
+      const text = match[1].trim();
+      if (text && text.length > 2 && text.length < 20) {
+        trending.push({ name: text, category: 'trending' });
+      }
     }
-  }
+  });
   
   return trending;
 }
 
 function extractRecentLaunches(html) {
-  // Look for recent launch indicators
-  const launchRegex = /(?:new|launch|created)[^>]*>([^<]*)</gi;
   const launches = [];
   
-  let match;
-  while ((match = launchRegex.exec(html)) !== null && launches.length < 5) {
-    const text = match[1].trim();
-    if (text && text.length > 2) {
-      launches.push({ name: text, category: 'new_launch' });
+  // Look for recent launch indicators
+  const patterns = [
+    /(?:new|launch|created)[^>]*>([^<]*)</gi,
+    /"created_timestamp":\s*(\d+)/g,
+    /recently\s+launched[^>]*>([^<]*)</gi
+  ];
+  
+  patterns.forEach(pattern => {
+    let match;
+    while ((match = pattern.exec(html)) !== null && launches.length < 5) {
+      const text = match[1].trim();
+      if (text && text.length > 2 && text.length < 30) {
+        launches.push({ name: text, category: 'new_launch' });
+      }
     }
-  }
+  });
   
   return launches;
 }
@@ -271,14 +299,15 @@ function extractNewsHeadlines(html, source) {
   
   // Different patterns for different news sites
   const patterns = [
-    /<h[1-3][^>]*>([^<]*(?:crypto|bitcoin|ethereum|memecoin)[^<]*)<\/h[1-3]>/gi,
-    /<title>([^<]*(?:crypto|bitcoin|ethereum|memecoin)[^<]*)<\/title>/gi,
-    /class="[^"]*headline[^"]*"[^>]*>([^<]*)</gi
+    /<h[1-3][^>]*>([^<]*(?:crypto|bitcoin|ethereum|memecoin|pump|solana)[^<]*)<\/h[1-3]>/gi,
+    /<title>([^<]*(?:crypto|bitcoin|ethereum|memecoin|pump)[^<]*)<\/title>/gi,
+    /class="[^"]*headline[^"]*"[^>]*>([^<]*)</gi,
+    /"headline":\s*"([^"]*(?:crypto|bitcoin|ethereum|memecoin)[^"]*)"/gi
   ];
   
-  for (const pattern of patterns) {
+  patterns.forEach(pattern => {
     let match;
-    while ((match = pattern.exec(html)) !== null && headlines.length < 10) {
+    while ((match = pattern.exec(html)) !== null && headlines.length < 15) {
       const headline = match[1].trim();
       if (headline && headline.length > 10 && headline.length < 200) {
         headlines.push({
@@ -288,13 +317,13 @@ function extractNewsHeadlines(html, source) {
         });
       }
     }
-  }
+  });
   
   return headlines.sort((a, b) => b.relevance - a.relevance);
 }
 
 function calculateRelevance(text) {
-  const keywords = ['memecoin', 'pump', 'launch', 'trending', 'solana', 'ethereum', 'bitcoin'];
+  const keywords = ['memecoin', 'pump', 'launch', 'trending', 'solana', 'ethereum', 'bitcoin', 'price', 'surge', 'moon'];
   let score = 0;
   
   keywords.forEach(keyword => {
@@ -310,13 +339,14 @@ function findBreakingNews(newsItems) {
   return newsItems.filter(item => 
     item.title.toLowerCase().includes('breaking') ||
     item.title.toLowerCase().includes('urgent') ||
+    item.title.toLowerCase().includes('alert') ||
     item.relevance > 2
   );
 }
 
 function findMemecoinMentions(newsItems) {
   const memecoins = [];
-  const memecoinRegex = /\$[A-Z]{3,10}|PEPE|DOGE|SHIB|BONK|WIF/gi;
+  const memecoinRegex = /\$[A-Z]{3,10}|PEPE|DOGE|SHIB|BONK|WIF|BRETT|POPCAT/gi;
   
   newsItems.forEach(item => {
     const matches = item.title.match(memecoinRegex);
@@ -330,7 +360,7 @@ function findMemecoinMentions(newsItems) {
 
 function findTrendingCrypto(socialData) {
   const mentions = {};
-  const cryptoRegex = /\$[A-Z]{3,10}|bitcoin|ethereum|solana|cardano/gi;
+  const cryptoRegex = /\$[A-Z]{3,10}|bitcoin|ethereum|solana|cardano|dogecoin|pepe|shib/gi;
   
   socialData.forEach(post => {
     const matches = post.title.match(cryptoRegex);
@@ -348,8 +378,8 @@ function findTrendingCrypto(socialData) {
 }
 
 function analyzeSocialSentiment(socialData) {
-  const positiveWords = ['moon', 'pump', 'bullish', 'rocket', 'gains', 'up'];
-  const negativeWords = ['dump', 'bearish', 'crash', 'down', 'rekt', 'fall'];
+  const positiveWords = ['moon', 'pump', 'bullish', 'rocket', 'gains', 'up', 'bull', 'green'];
+  const negativeWords = ['dump', 'bearish', 'crash', 'down', 'rekt', 'fall', 'bear', 'red'];
   
   let positiveScore = 0;
   let negativeScore = 0;
@@ -408,36 +438,49 @@ INSTRUCTIONS:
 Create a ${requestType} that:
 1. References something you haven't talked about recently (check memory context)
 2. Mentions specific findings from the web scraping (pump.fun tokens, news, social posts)
-3. Uses pig puns and your signature style
+3. Uses pig puns and your signature style ("oink", "hog wild", "bacon", etc.)
 4. Includes current price action but focus on NEW/SCRAPED info
 5. Keep it 30-60 seconds when spoken (under 150 words)
 6. End with smooth transition to music
+7. Sound like you're actually browsing the web and finding this stuff live
 
 Make it feel like you're a real DJ with insider knowledge from scouring the web!`;
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 250,
-      messages: [{
-        role: 'user',
-        content: prompt
-      }]
-    })
-  });
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: 250,
+        messages: [{
+          role: 'user',
+          content: prompt
+        }]
+      })
+    });
 
-  if (!response.ok) {
-    throw new Error(`Anthropic API error: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Anthropic API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.content[0].text;
+  } catch (error) {
+    console.error('Content generation failed:', error);
+    return getFallbackContent(webData);
   }
+}
 
-  const data = await response.json();
-  return data.content[0].text;
+function getFallbackContent(webData) {
+  const tokens = webData.pumpFun.tokens.slice(0, 2).map(t => t.name).join(' and ');
+  const sentiment = webData.social.sentiment;
+  
+  return `Oink oink! Porky here on OINK FM! Just scraped the web and found ${webData.pumpFun.totalFound} tokens on pump.fun - ${tokens ? `including ${tokens}` : 'the market is hog wild today'}! Social sentiment is looking ${sentiment}, and the crypto community is absolutely buzzing! Let me spin some tracks while I dig deeper into this beautiful chaos!`;
 }
 
 function buildContextPrompt(memory, webData) {
@@ -456,9 +499,10 @@ AVOID REPEATING: ${memory.recentTopics.join(', ')}
 `;
 }
 
-// Memory functions (same as before but simplified)
+// Memory functions using Upstash Redis
 async function getMemoryData() {
   try {
+    const { Redis } = await import('@upstash/redis');
     const redis = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -479,6 +523,7 @@ async function getMemoryData() {
 
 async function storeMemory(memoryItem) {
   try {
+    const { Redis } = await import('@upstash/redis');
     const redis = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -504,7 +549,7 @@ function extractTopics(content) {
   const coinMatches = content.match(/\$[A-Z]{3,10}/g);
   if (coinMatches) topics.push(...coinMatches);
   
-  const keyPhrases = content.match(/(?:pump\.fun|launch|trending|memecoin|NFT|DeFi|solana|ethereum)/gi);
+  const keyPhrases = content.match(/(?:pump\.fun|launch|trending|memecoin|NFT|DeFi|solana|ethereum|bitcoin)/gi);
   if (keyPhrases) topics.push(...keyPhrases);
   
   return [...new Set(topics)];
