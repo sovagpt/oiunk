@@ -305,7 +305,6 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
 
             async generateRadioContent(cryptoData) {
     try {
-        // Call enhanced API instead of basic chat
         const response = await fetch('/api/enhanced-chat', {
             method: 'POST',
             headers: {
@@ -317,13 +316,20 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
             })
         });
 
+        console.log('API Response status:', response.status);
+        console.log('API Response headers:', response.headers);
+
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Enhanced API Error:', errorData);
-            throw new Error(`API Error: ${response.status}`);
+            const errorText = await response.text();
+            console.error('API Error Response:', errorText);
+            throw new Error(`API Error: ${response.status} - ${errorText}`);
         }
 
-        const data = await response.json();
+        const responseText = await response.text();
+        console.log('Raw API Response:', responseText);
+
+        // Try to parse as JSON
+        const data = JSON.parse(responseText);
         
         // Log the scraped data for debugging
         console.log('🕷️ Web scraping results:', data.metadata);
@@ -333,7 +339,7 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
     } catch (error) {
         console.error('Enhanced content generation failed:', error);
         this.updateStatus("⚠️ Enhanced API Error - using fallback");
-        return "Oink oink! Porky here on OINK FM! I was just scouring the web for the latest memecoin chaos, and let me tell you - the markets are absolutely hog wild today! Let me spin some tracks while I dig deeper into this beautiful madness!";
+        return "OINK OINK! Porky here on OINK FM! Something's funky with my intel network but the crypto markets are still hog wild! Let me spin some tracks while I fix my connections!";
     }
 }
 
