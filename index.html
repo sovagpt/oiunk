@@ -304,42 +304,38 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
             }
 
             async generateRadioContent(cryptoData) {
-                const prompt = `You are Porky, a charismatic crypto radio host on OINK FM 24.7. 
-                Create a short, engaging radio segment (30-60 seconds when spoken) about recent crypto news.
-                
-                Current crypto data: ${JSON.stringify(cryptoData)}
-                
-                Style: Casual, enthusiastic, slightly edgy like a pirate radio DJ with pig-themed humor
-                Include: Current prices, trending coins, market sentiment, memecoin mentions
-                Personality: Fun, irreverent, uses pig puns and crypto slang
-                End with: A smooth transition to introduce the next song
-                Keep it under 150 words and make it sound natural and spontaneous.`;
+    try {
+        // Call enhanced API instead of basic chat
+        const response = await fetch('/api/enhanced-chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                cryptoData,
+                requestType: 'segment'
+            })
+        });
 
-                try {
-                    const response = await fetch('/api/chat', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ prompt })
-                    });
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Enhanced API Error:', errorData);
+            throw new Error(`API Error: ${response.status}`);
+        }
 
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        console.error('API Error:', errorData);
-                        throw new Error(`API Error: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    console.log('✅ AI content generated successfully!');
-                    return data.content;
-                    
-                } catch (error) {
-                    console.error('Error generating content:', error);
-                    this.updateStatus("⚠️ API Error - using fallback content");
-                    return "Oink oink! Porky here on OINK FM! The crypto markets are absolutely hog wild today - Bitcoin's squealing to new heights, memecoins are rolling in the mud, and the whole space is more chaotic than feeding time at the farm! But hey, that's why we love this pig pen, right? Let's bacon some musical magic while I sniff out more juicy intel for you beautiful degenerates!";
-                }
-            }
+        const data = await response.json();
+        
+        // Log the scraped data for debugging
+        console.log('🕷️ Web scraping results:', data.metadata);
+        
+        return data.content;
+        
+    } catch (error) {
+        console.error('Enhanced content generation failed:', error);
+        this.updateStatus("⚠️ Enhanced API Error - using fallback");
+        return "Oink oink! Porky here on OINK FM! I was just scouring the web for the latest memecoin chaos, and let me tell you - the markets are absolutely hog wild today! Let me spin some tracks while I dig deeper into this beautiful madness!";
+    }
+}
 
             async textToSpeech(text) {
                 return new Promise((resolve) => {
