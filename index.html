@@ -27,8 +27,8 @@
             padding: 30px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
             text-align: center;
-            max-width: 800px;
-            width: 90%;
+            width: fit-content;
+            margin: 0 auto;
         }
 
         .logo {
@@ -51,9 +51,9 @@
 
         .visual-container {
             position: relative;
-            width: 100%;
-            height: 500px;
-            margin: 20px 0;
+            width: 1403px;
+            height: 992px;
+            margin: 20px auto;
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
@@ -61,17 +61,17 @@
 
         .canvas-container {
             position: relative;
-            width: 100%;
-            height: 500px;
+            width: 1403px;
+            height: 992px;
             border-radius: 15px;
             overflow: hidden;
             background: #000;
         }
 
         #streamCanvas {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+            width: 1403px;
+            height: 992px;
+            display: block;
         }
 
         .status-display {
@@ -288,15 +288,16 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                 this.ctx = this.canvas.getContext('2d');
                 this.currentImage = 'studio';
                 
-                // Images - Your GitHub URLs (force reload to ensure GIF loops)
+                // Images - separate GIF element for animation
                 this.studioImage = new Image();
-                this.porkyGif = new Image();
-                this.studioImage.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/studio.jpg';
-                this.porkyGif.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif';
+                this.porkyGifElement = document.createElement('img');
+                this.porkyGifElement.crossOrigin = "anonymous";
+                this.porkyGifElement.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif';
                 
-                // Force GIF to loop by reloading when talking starts
+                this.studioImage.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/studio.jpg';
+                
+                // Tracking
                 this.isTalking = false;
-                this.lastGifRefresh = 0;
                 
                 // DOM elements
                 this.audioPlayer = document.getElementById('audioPlayer');
@@ -331,23 +332,15 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
             }
 
             animate() {
-                const now = Date.now();
-                
                 // Clear canvas
                 this.ctx.clearRect(0, 0, 1403, 992);
                 
-                // Draw current image with proper scaling
+                // Draw current image at native size (no stretching)
                 if (this.currentImage === 'studio' && this.studioImage.complete) {
                     this.ctx.drawImage(this.studioImage, 0, 0, 1403, 992);
-                } else if (this.currentImage === 'porky' && this.porkyGif.complete) {
-                    // Force continuous redraw for GIF animation
-                    this.ctx.drawImage(this.porkyGif, 0, 0, 1403, 992);
-                    
-                    // If talking, force refresh every 100ms to keep GIF animating
-                    if (this.isTalking && now - this.lastGifRefresh > 100) {
-                        this.lastGifRefresh = now;
-                        // This helps ensure the GIF keeps animating
-                    }
+                } else if (this.currentImage === 'porky' && this.porkyGifElement.complete) {
+                    // Draw the GIF element which will animate naturally
+                    this.ctx.drawImage(this.porkyGifElement, 0, 0, 1403, 992);
                 } else {
                     // Fallback background
                     this.ctx.fillStyle = '#667eea';
@@ -358,7 +351,7 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                     this.ctx.fillText('OINK FM Studio', 701, 496);
                 }
                 
-                // Add OINK FM logo overlay when live (removed LIVE indicator)
+                // Add OINK FM logo overlay when live
                 if (this.isPlaying) {
                     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                     this.ctx.fillRect(20, 20, 350, 120);
@@ -546,15 +539,13 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
             showPorkyTalking() {
                 this.currentImage = 'porky';
                 this.isTalking = true;
-                this.lastGifRefresh = Date.now();
                 
-                // Create a new image element to force GIF restart
-                const newGif = new Image();
-                newGif.crossOrigin = "anonymous";
-                newGif.onload = () => {
-                    this.porkyGif = newGif;
-                };
-                newGif.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif?t=' + Date.now();
+                // Create a fresh GIF element to restart animation
+                this.porkyGifElement = document.createElement('img');
+                this.porkyGifElement.crossOrigin = "anonymous";
+                this.porkyGifElement.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif?reload=' + Date.now();
+                
+                console.log('🐷 Porky GIF reloaded for animation');
             }
 
             showStudio() {
