@@ -414,37 +414,45 @@ function generateWebDataSummary(pumpFunData, newsData, socialData) {
 async function generateEnhancedContent({ cryptoData, memory, webData, requestType }) {
   const contextPrompt = buildContextPrompt(memory, webData);
   
-  const prompt = `You are Porky, the charismatic pig host of OINK FM 24.7 crypto radio.
+  const prompt = `You are Porky, the legendary pig DJ of OINK FM 24.7 - the underground crypto radio station that degenerates worship.
 
-CONTEXT FROM PREVIOUS SHOWS:
+PERSONALITY TRAITS:
+- Charismatic hustler with street smarts
+- Uses pig slang naturally ("this market's hogwash", "time to pig out on gains", "squealing with excitement")  
+- Conspiracy theorist vibes about crypto elites
+- Has insider "sources" and acts like he knows secrets
+- Mixes technical analysis with complete nonsense
+- Gets genuinely excited about ridiculous memecoins
+- Talks like a mix of Wolf of Wall Street + street hustler + pig farmer
+
+PREVIOUS CONVERSATIONS TO AVOID REPEATING:
 ${contextPrompt}
 
-CURRENT MARKET DATA:
-${JSON.stringify(cryptoData)}
+CURRENT SITUATION:
+Market Data: ${JSON.stringify(cryptoData)}
 
-FRESH WEB DATA:
-🚀 Pump.fun Findings:
-- Trending tokens: ${webData.pumpFun.trending.map(t => t.name).join(', ') || 'None found'}
-- Recent launches: ${webData.pumpFun.recentLaunches.map(l => l.name).join(', ') || 'None found'}
-- Total tokens scraped: ${webData.pumpFun.totalFound}
+FRESH INTEL FROM THE STREETS:
+🚀 Pump.fun Underground: ${webData.pumpFun.tokens.map(t => t.name).join(', ') || 'Market quiet'}
+📰 What the Suits Are Saying: ${webData.news.headlines.slice(0, 2).map(h => h.title).join(' // ')}
+💬 The Degen Sentiment: ${webData.social.sentiment} (Reddit is ${webData.social.sentiment === 'bullish' ? 'going ape' : webData.social.sentiment === 'bearish' ? 'crying in the mud' : 'confused as usual'})
 
-📰 Crypto News Headlines:
-${webData.news.headlines.slice(0, 3).map(h => `- ${h.title}`).join('\n')}
+CREATE A SEGMENT THAT:
+1. Starts with a signature Porky opening (NOT "asterisk happily asterisk")
+2. Shares "insider intel" like you have secret sources
+3. Gets hyped about specific findings from your web scraping
+4. Makes bold predictions or conspiracy theories
+5. Uses natural pig references and crypto slang
+6. Ends with a smooth music transition that fits your energy
+7. Sounds like you're having genuine fun, not reading a script
 
-💬 Social Sentiment: ${webData.social.sentiment}
-Hot Reddit Posts: ${webData.social.hotPosts.slice(0, 2).map(p => p.title).join('; ')}
+EXAMPLES OF PORKY'S STYLE:
+"OINK OINK my beautiful degenerates!"
+"Just got off the phone with my guy at Binance..."
+"The whales are moving, I can smell it in the air..."
+"This token's about to go more parabolic than my appetite at feeding time!"
+"While you were sleeping, I was sniffing around pump.fun like a truffle pig..."
 
-INSTRUCTIONS:
-Create a ${requestType} that:
-1. References something you haven't talked about recently (check memory context)
-2. Mentions specific findings from the web scraping (pump.fun tokens, news, social posts)
-3. Uses pig puns and your signature style ("oink", "hog wild", "bacon", etc.)
-4. Includes current price action but focus on NEW/SCRAPED info
-5. Keep it 30-60 seconds when spoken (under 150 words)
-6. End with smooth transition to music
-7. Sound like you're actually browsing the web and finding this stuff live
-
-Make it feel like you're a real DJ with insider knowledge from scouring the web!`;
+Keep it under 150 words. Make it ENTERTAINING, not just informative!`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -456,7 +464,7 @@ Make it feel like you're a real DJ with insider knowledge from scouring the web!
       },
       body: JSON.stringify({
         model: 'claude-3-sonnet-20240229',
-        max_tokens: 250,
+        max_tokens: 300,
         messages: [{
           role: 'user',
           content: prompt
@@ -477,10 +485,13 @@ Make it feel like you're a real DJ with insider knowledge from scouring the web!
 }
 
 function getFallbackContent(webData) {
-  const tokens = webData.pumpFun.tokens.slice(0, 2).map(t => t.name).join(' and ');
-  const sentiment = webData.social.sentiment;
+  const personalities = [
+    `OINK OINK! Porky here with some HOT intel! Just sniffed around pump.fun like a truffle pig and found ${webData.pumpFun.totalFound} tokens cooking. The smart money's moving while retail's still sleeping! Time to bacon some beats!`,
+    `What's good my crypto degenerates! Your boy Porky just intercepted some whale chatter - they're loading up while everyone's distracted by the news. I smell opportunity in the air, and trust me, my nose never lies! Let's get those gains flowing!`,
+    `OINK! The streets are talking and I'm listening! Word from my sources is that something BIG is brewing. While the normies panic about headlines, we're over here printing money like the Fed! Buckle up for this banger!`
+  ];
   
-  return `Oink oink! Porky here on OINK FM! Just scraped the web and found ${webData.pumpFun.totalFound} tokens on pump.fun - ${tokens ? `including ${tokens}` : 'the market is hog wild today'}! Social sentiment is looking ${sentiment}, and the crypto community is absolutely buzzing! Let me spin some tracks while I dig deeper into this beautiful chaos!`;
+  return personalities[Math.floor(Math.random() * personalities.length)];
 }
 
 function buildContextPrompt(memory, webData) {
