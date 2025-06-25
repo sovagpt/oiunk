@@ -27,9 +27,6 @@ async function handleChatGeneration(req, res) {
    
    console.log('🎙️ Generating enhanced content...');
    
-   // Clear corrupted memory (remove this line after first successful run)
-   await clearMemory();
-   
    // Get memory and fresh web data
    const memory = await getMemoryData();
    const webData = await scrapeWebData();
