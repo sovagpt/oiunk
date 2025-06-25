@@ -378,6 +378,10 @@
                 <div class="stat-number" id="knowledgeCount">0</div>
                 <div class="stat-label">Knowledge Items</div>
             </div>
+            <div class="stat-box">
+                <div class="stat-number" id="songCount">0</div>
+                <div class="stat-label">Songs Available</div>
+            </div>
         </div>
 
         <div class="news-ticker" id="newsTicker">
@@ -468,19 +472,19 @@ Examples:
         </div>
 
         <div class="config-section">
-            <h3>🎵 Add Music (Optional)</h3>
-            <textarea id="songList" rows="3" placeholder="Add song URLs (one per line)">
-https://www.soundjay.com/misc/sounds/beep-07a.wav
-https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textarea>
+            <h3>🎵 Music Library Status</h3>
+            <textarea id="songList" rows="3" placeholder="Music files will appear here automatically...">
+Loading music library from GitHub...
+            </textarea>
         </div>
     </div>
 
     <script>
         class OinkFMRadio {
             constructor() {
-    this.isPlaying = false;
-    this.currentSegment = null;
-    this.songs = [];
+                this.isPlaying = false;
+                this.currentSegment = null;
+                this.songs = []; // Will auto-load from GitHub
                 
                 // DOM elements
                 this.studioImg = document.getElementById('studioImg');
@@ -494,16 +498,76 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
                 
                 this.setupEventListeners();
                 this.updateStatus('🐷 OINK FM loaded and ready!');
+                this.loadMusicLibrary();
                 this.refreshData();
             }
 
-            setupEventListeners() {
-                // Update song list
-                document.getElementById('songList').addEventListener('input', (e) => {
-                    const newSongs = e.target.value.split('\n').filter(url => url.trim());
-                    this.songs = [...this.songs, ...newSongs];
-                });
+            async loadMusicLibrary() {
+                console.log('🎵 Loading music library from GitHub...');
+                this.updateStatus('🎵 Scanning GitHub for music files...');
                 
+                const musicUrls = [];
+                
+                // Generate URLs for songs (track001.mp3 to track100.mp3)
+                for (let i = 1; i <= 100; i++) {
+                    const trackNumber = i.toString().padStart(3, '0');
+                    musicUrls.push(`https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/music/track${trackNumber}.mp3`);
+                }
+                
+                // Test which songs exist
+                const validSongs = [];
+                let foundCount = 0;
+                
+                for (const url of musicUrls) {
+                    try {
+                        const response = await fetch(url, { method: 'HEAD' });
+                        if (response.ok) {
+                            validSongs.push(url);
+                            foundCount++;
+                            console.log(`✅ Found song ${foundCount}: ${url.split('/').pop()}`);
+                            
+                            // Update status as we find songs
+                            if (foundCount % 3 === 0) {
+                                this.updateStatus(`🎵 Found ${foundCount} songs so far...`);
+                            }
+                        }
+                    } catch (error) {
+                        // Song doesn't exist, continue searching
+                    }
+                }
+                
+                this.songs = validSongs;
+                
+                if (validSongs.length > 0) {
+                    this.updateStatus(`🎵 Music library loaded: ${validSongs.length} songs ready!`);
+                    console.log(`🎵 Total music library: ${validSongs.length} songs`);
+                    this.displayMusicLibrary();
+                } else {
+                    this.updateStatus('❌ No music found - upload MP3s to assets/music/');
+                    console.log('❌ No songs found in GitHub music folder');
+                    // Fallback to some working URLs
+                    this.songs = [
+                        'https://www.soundjay.com/misc/sounds/beep-07a.wav',
+                        'https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3'
+                    ];
+                    this.updateStatus('🎵 Using fallback music - upload your tracks to assets/music/');
+                }
+                
+                // Update song count
+                document.getElementById('songCount').textContent = this.songs.length;
+            }
+
+            displayMusicLibrary() {
+                const songListTextarea = document.getElementById('songList');
+                if (songListTextarea && this.songs.length > 0) {
+                    const songNames = this.songs.map(url => url.split('/').pop());
+                    songListTextarea.value = songNames.join('\n');
+                    songListTextarea.placeholder = `${this.songs.length} songs loaded automatically from GitHub`;
+                    songListTextarea.rows = Math.min(10, Math.max(3, songNames.length));
+                }
+            }
+
+            setupEventListeners() {
                 // Video event listeners
                 this.porkyVideo.addEventListener('loadeddata', () => {
                     console.log('✅ Porky video loaded and ready');
@@ -642,6 +706,7 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
                     document.getElementById('queueCount').textContent = data.queue?.length || 0;
                     document.getElementById('memoryCount').textContent = data.memory?.recent?.length || 0;
                     document.getElementById('knowledgeCount').textContent = data.knowledge?.length || 0;
+                    document.getElementById('songCount').textContent = this.songs.length;
                 } catch (error) {
                     console.error('Refresh stats failed:', error);
                 }
@@ -854,11 +919,6 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
                 this.isPlaying = true;
                 this.updateStatus("🎙️ OINK FM is going LIVE!");
                 
-                // Load additional songs if any
-                const songInput = document.getElementById('songList').value;
-                const additionalSongs = songInput.split('\n').filter(url => url.trim());
-                this.songs = [...this.songs, ...additionalSongs];
-                
                 while (this.isPlaying) {
                     try {
                         // Fetch crypto data
@@ -896,6 +956,66 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
                         console.error('Error in show loop:', error);
                         this.updateStatus("❌ Something went wrong, retrying...");
                         await this.delay(30000);
+                    }
+                }
+            }
+
+            async playRandomSong() {
+                if (this.songs.length === 0) {
+                    console.log('🎵 No songs available, skipping music segment');
+                    await this.delay(30000); // Wait 30 seconds instead of playing music
+                    return;
+                }
+                
+                // Try up to 3 different songs if one fails
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    const randomSong = this.songs[Math.floor(Math.random() * this.songs.length)];
+                    
+                    try {
+                        console.log(`🎵 Attempting to play: ${randomSong.split('/').pop()} (attempt ${attempt + 1})`);
+                        
+                        return new Promise((resolve) => {
+                            this.audioPlayer.onerror = (error) => {
+                                console.error(`❌ Song failed to play:`, error);
+                                console.error(`❌ Failed URL: ${randomSong}`);
+                                resolve(); // Continue to next attempt
+                            };
+                            
+                            this.audioPlayer.oncanplaythrough = () => {
+                                console.log(`✅ Song loaded successfully: ${randomSong.split('/').pop()}`);
+                                this.audioPlayer.play().catch(e => {
+                                    console.error('Play error:', e);
+                                    resolve();
+                                });
+                            };
+                            
+                            this.audioPlayer.onended = () => {
+                                console.log(`🎵 Song finished playing`);
+                                resolve();
+                            };
+                            
+                            // Set source and start loading
+                            this.audioPlayer.src = randomSong;
+                            
+                            // Timeout after 4 minutes
+                            const timeout = setTimeout(() => {
+                                console.log(`⏰ Song timeout reached`);
+                                resolve();
+                            }, 240000);
+                            
+                            this.audioPlayer.onended = () => {
+                                clearTimeout(timeout);
+                                resolve();
+                            };
+                        });
+                        
+                    } catch (error) {
+                        console.error(`❌ Song attempt ${attempt + 1} failed:`, error);
+                        if (attempt === 2) {
+                            console.log('🎵 All song attempts failed, continuing without music');
+                            await this.delay(30000); // Wait 30 seconds
+                            return;
+                        }
                     }
                 }
             }
@@ -947,82 +1067,10 @@ https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3</textar
                 }
             }
 
-            async loadMusicLibrary() {
-    console.log('🎵 Loading music library from GitHub...');
-    this.updateStatus('🎵 Scanning GitHub for music files...');
-    
-    const musicUrls = [];
-    
-    // Generate URLs for your songs (track001.mp3 to track050.mp3)
-    for (let i = 1; i <= 50; i++) {
-        const trackNumber = i.toString().padStart(3, '0');
-        musicUrls.push(`https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/music/track${trackNumber}.mp3`);
-    }
-    
-    // Test which songs exist
-    const validSongs = [];
-    for (const url of musicUrls) {
-        try {
-            const response = await fetch(url, { method: 'HEAD' });
-            if (response.ok) {
-                validSongs.push(url);
-                console.log(`✅ Found: ${url.split('/').pop()}`);
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
             }
-        } catch (error) {
-            // Song doesn't exist, skip
         }
-    }
-    
-    this.songs = validSongs;
-    this.updateStatus(`🎵 Music library loaded: ${validSongs.length} songs ready!`);
-}
-
-            async playRandomSong() {
-    if (this.songs.length === 0) return;
-    
-    const randomSong = this.songs[Math.floor(Math.random() * this.songs.length)];
-    
-    // Debug: Log the URL being used
-    console.log(`🎵 Trying to play: ${randomSong}`);
-    
-    // Test if the URL is actually accessible
-    try {
-        const testResponse = await fetch(randomSong, { method: 'HEAD' });
-        console.log(`🔍 URL test result: ${testResponse.status} - ${testResponse.ok ? 'OK' : 'Failed'}`);
-    } catch (error) {
-        console.error(`❌ URL test failed:`, error);
-    }
-    
-    return new Promise((resolve) => {
-        // Add more detailed error logging
-        this.audioPlayer.onerror = (error) => {
-            console.error(`❌ Audio player error:`, error);
-            console.error(`❌ Failed URL: ${randomSong}`);
-            console.error(`❌ Audio player error code:`, this.audioPlayer.error?.code);
-            resolve();
-        };
-        
-        this.audioPlayer.onloadstart = () => {
-            console.log(`🎵 Started loading: ${randomSong.split('/').pop()}`);
-        };
-        
-        this.audioPlayer.oncanplay = () => {
-            console.log(`✅ Can play: ${randomSong.split('/').pop()}`);
-        };
-        
-        this.audioPlayer.src = randomSong;
-        this.audioPlayer.play().catch(e => {
-            console.error('Play error:', e);
-            resolve();
-        });
-        
-        const timeout = setTimeout(resolve, 180000);
-        this.audioPlayer.onended = () => {
-            clearTimeout(timeout);
-            resolve();
-        };
-    });
-}
 
         // Initialize the radio
         const radio = new OinkFMRadio();
