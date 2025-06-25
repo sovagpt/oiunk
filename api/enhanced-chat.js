@@ -504,8 +504,8 @@ async function getMemoryData() {
   try {
     const { Redis } = await import('@upstash/redis');
     const redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
     });
     
     const recent = await redis.lrange('porky:memory', 0, 9);
@@ -525,8 +525,8 @@ async function storeMemory(memoryItem) {
   try {
     const { Redis } = await import('@upstash/redis');
     const redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
     });
     
     await redis.lpush('porky:memory', JSON.stringify(memoryItem));
