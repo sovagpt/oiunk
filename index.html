@@ -230,7 +230,7 @@
         
         <div class="visual-container">
             <div class="canvas-container">
-                <canvas id="streamCanvas" width="800" height="400"></canvas>
+                <canvas id="streamCanvas" width="1403" height="992"></canvas>
             </div>
             <div class="live-indicator" id="liveIndicator">🔴 LIVE</div>
         </div>
@@ -260,7 +260,7 @@
                 <ol style="color: #fff; margin-left: 20px;">
                     <li>Download OBS Studio (free)</li>
                     <li>Add Browser Source: <strong>https://oiunk.vercel.app</strong></li>
-                    <li>Set Width: 800, Height: 400</li>
+                    <li>Set Width: 1403, Height: 992</li>
                     <li>Connect OBS to YouTube and go live!</li>
                 </ol>
             </div>
@@ -289,11 +289,14 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
                 this.ctx = this.canvas.getContext('2d');
                 this.currentImage = 'studio';
                 
-                // Images - Your GitHub URLs
+                // Images - Your GitHub URLs (force reload to ensure GIF loops)
                 this.studioImage = new Image();
                 this.porkyGif = new Image();
                 this.studioImage.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/studio.jpg';
                 this.porkyGif.src = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif';
+                
+                // Force GIF to loop by reloading when talking starts
+                this.isTalking = false;
                 
                 // DOM elements
                 this.audioPlayer = document.getElementById('audioPlayer');
@@ -307,16 +310,21 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
             }
 
             setupCanvas() {
-                this.canvas.width = 800;
-                this.canvas.height = 400;
+                this.canvas.width = 1403;
+                this.canvas.height = 992;
                 
                 // Default background
                 this.ctx.fillStyle = '#667eea';
-                this.ctx.fillRect(0, 0, 800, 400);
+                this.ctx.fillRect(0, 0, 1403, 992);
                 this.ctx.fillStyle = 'white';
-                this.ctx.font = '24px Arial';
+                this.ctx.font = '48px Arial';
                 this.ctx.textAlign = 'center';
-                this.ctx.fillText('OINK FM Studio - Loading...', 400, 200);
+                this.ctx.fillText('OINK FM Studio - Loading...', 701, 496);
+                
+                // GIF animation tracking
+                this.porkyFrameIndex = 0;
+                this.lastFrameTime = 0;
+                this.frameDelay = 100; // milliseconds between frames
                 
                 // Start animation loop
                 this.animate();
@@ -324,45 +332,46 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
 
             animate() {
                 // Clear canvas
-                this.ctx.clearRect(0, 0, 800, 400);
+                this.ctx.clearRect(0, 0, 1403, 992);
                 
                 // Draw current image
                 if (this.currentImage === 'studio' && this.studioImage.complete) {
-                    this.ctx.drawImage(this.studioImage, 0, 0, 800, 400);
+                    this.ctx.drawImage(this.studioImage, 0, 0, 1403, 992);
                 } else if (this.currentImage === 'porky' && this.porkyGif.complete) {
-                    this.ctx.drawImage(this.porkyGif, 0, 0, 800, 400);
+                    // For GIF animation, we'll redraw it continuously to keep it looping
+                    this.ctx.drawImage(this.porkyGif, 0, 0, 1403, 992);
                 } else {
                     // Fallback background
                     this.ctx.fillStyle = '#667eea';
-                    this.ctx.fillRect(0, 0, 800, 400);
+                    this.ctx.fillRect(0, 0, 1403, 992);
                     this.ctx.fillStyle = 'white';
-                    this.ctx.font = '24px Arial';
+                    this.ctx.font = '48px Arial';
                     this.ctx.textAlign = 'center';
-                    this.ctx.fillText('OINK FM Studio', 400, 200);
+                    this.ctx.fillText('OINK FM Studio', 701, 496);
                 }
                 
                 // Add OINK FM logo overlay when live
                 if (this.isPlaying) {
                     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                    this.ctx.fillRect(10, 10, 200, 60);
+                    this.ctx.fillRect(20, 20, 350, 120);
                     this.ctx.fillStyle = '#ff6b6b';
-                    this.ctx.font = 'bold 20px Arial';
+                    this.ctx.font = 'bold 36px Arial';
                     this.ctx.textAlign = 'left';
-                    this.ctx.fillText('OINK FM 24.7', 20, 35);
+                    this.ctx.fillText('OINK FM 24.7', 40, 70);
                     this.ctx.fillStyle = '#4ecdc4';
-                    this.ctx.font = '14px Arial';
-                    this.ctx.fillText('Hosted by Porky', 20, 55);
+                    this.ctx.font = '24px Arial';
+                    this.ctx.fillText('Hosted by Porky', 40, 110);
                 }
                 
                 // Add live crypto ticker at bottom
                 if (this.isPlaying && this.newsTicker.textContent !== 'Latest crypto intel will appear here...') {
                     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-                    this.ctx.fillRect(0, 360, 800, 40);
+                    this.ctx.fillRect(0, 920, 1403, 72);
                     this.ctx.fillStyle = '#00ff41';
-                    this.ctx.font = '16px Courier New';
+                    this.ctx.font = '28px Courier New';
                     this.ctx.textAlign = 'left';
-                    const tickerText = this.newsTicker.textContent.substring(0, 80) + '...';
-                    this.ctx.fillText(tickerText, 10, 385);
+                    const tickerText = this.newsTicker.textContent.substring(0, 120) + '...';
+                    this.ctx.fillText(tickerText, 20, 965);
                 }
                 
                 requestAnimationFrame(() => this.animate());
@@ -530,10 +539,17 @@ https://file-examples.com/storage/fe86c94f7bb8649b7aa1f39/2017/11/file_example_M
 
             showPorkyTalking() {
                 this.currentImage = 'porky';
+                this.isTalking = true;
+                
+                // Force reload the GIF to restart animation
+                const gifSrc = this.porkyGif.src;
+                this.porkyGif.src = '';
+                this.porkyGif.src = gifSrc + '?t=' + Date.now(); // Add timestamp to force reload
             }
 
             showStudio() {
                 this.currentImage = 'studio';
+                this.isTalking = false;
             }
 
             updateStatus(message) {
