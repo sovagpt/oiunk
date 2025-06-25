@@ -89,6 +89,22 @@ async function scrapeWebData() {
   }
 }
 
+async function clearMemory() {
+  try {
+    const { Redis } = await import('@upstash/redis');
+    const redis = new Redis({
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
+    });
+    
+    await redis.del('porky:memory');
+    await redis.del('porky:recent_topics');
+    console.log('🧹 Memory cleared');
+  } catch (error) {
+    console.log('Clear memory failed:', error.message);
+  }
+}
+
 async function scrapePumpFun() {
   try {
     console.log('🚀 Scraping pump.fun...');
