@@ -1671,9 +1671,9 @@ Loading music library from GitHub...
                     }
                     
                     const urgentPerkyReport = queuedTopics.find(topic => 
-                        topic.type === 'perky_report' || 
-                        (topic.reporter === 'perky' && topic.priority === 'urgent')
-                    );
+    topic.type === 'perky_report' || 
+    topic.reporter === 'perky'
+);
                     
                     if (urgentPerkyReport) {
                         await this.handlePerkyReport(urgentPerkyReport);
