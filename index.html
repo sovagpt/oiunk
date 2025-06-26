@@ -82,7 +82,7 @@ body {
     align-items: center;
     height: 100%;
     white-space: nowrap;
-    animation: scroll-ticker 1200s linear infinite;
+    animation: scroll-ticker 3200s linear infinite;
     font-family: 'Bright Aura', 'Comic Sans MS', cursive, sans-serif;
     font-weight: bold;
     font-size: 16px;
@@ -2050,77 +2050,205 @@ Loading music library from GitHub...
        }
    }
 
+        async fadeOutAndChangeTrack() {
+    return new Promise((resolve) => {
+        // Fade current track out
+        this.fadeAudioVolume(1.0, 0, 2000);
+        
+        setTimeout(() => {
+            this.audioPlayer.pause();
+            resolve();
+        }, 2000);
+    });
+}
+
+async fadeInNewTrack() {
+    return new Promise((resolve) => {
+        this.audioPlayer.volume = 0;
+        this.audioPlayer.play().then(() => {
+            // Fade new track in
+            this.fadeAudioVolume(0, 1.0, 2000);
+            setTimeout(resolve, 2000);
+        }).catch(() => {
+            resolve();
+        });
+    });
+}
+
    async playRandomSong() {
-       if (this.songs.length === 0) {
-           console.log('🎵 No songs available, skipping music segment');
-           await this.delay(30000);
-           return { duration: 30000 };
-       }
-       
-       for (let attempt = 0; attempt < 3; attempt++) {
-           const randomSong = this.songs[Math.floor(Math.random() * this.songs.length)];
-           const trackName = this.getTrackName(randomSong);
-           
-           try {
-               console.log(`🎵 Attempting to play: ${randomSong.split('/').pop()} (attempt ${attempt + 1})`);
-               
-               return new Promise((resolve) => {
-                   const songStartTime = Date.now();
-                   
-                   this.audioPlayer.onerror = (error) => {
-                       const songDuration = Date.now() - songStartTime;
-                       console.error(`❌ Song failed to play:`, error);
-                       console.error(`❌ Failed URL: ${randomSong}`);
-                       this.hideNowPlaying();
-                       resolve({ duration: songDuration });
-                   };
-                   
-                   this.audioPlayer.oncanplaythrough = () => {
-                       console.log(`✅ Song loaded successfully: ${randomSong.split('/').pop()}`);
-                       this.showNowPlaying(trackName);
-                       this.audioPlayer.play().catch(e => {
-                           const songDuration = Date.now() - songStartTime;
-                           console.error('Play error:', e);
-                           this.hideNowPlaying();
-                           resolve({ duration: songDuration });
-                       });
-                   };
-                   
-                   this.audioPlayer.onended = () => {
-                       const songDuration = Date.now() - songStartTime;
-                       console.log(`🎵 Song finished playing (${Math.round(songDuration/1000)}s)`);
-                       this.hideNowPlaying();
-                       resolve({ duration: songDuration });
-                   };
-                   
-                   this.audioPlayer.src = randomSong;
-                   
-                   const timeout = setTimeout(() => {
-                       const songDuration = Date.now() - songStartTime;
-                       console.log(`⏰ Song timeout reached (${Math.round(songDuration/1000)}s)`);
-                       this.hideNowPlaying();
-                       resolve({ duration: songDuration, timedOut: true });
-                   }, 240000);
-                   
-                   this.audioPlayer.onended = () => {
-                       clearTimeout(timeout);
-                       const songDuration = Date.now() - songStartTime;
-                       this.hideNowPlaying();
-                       resolve({ duration: songDuration });
-                   };
-               });
-               
-           } catch (error) {
-               console.error(`❌ Song attempt ${attempt + 1} failed:`, error);
-               if (attempt === 2) {
-                   console.log('🎵 All song attempts failed, continuing without music');
-                   this.hideNowPlaying();
-                   await this.delay(30000);
-                   return { duration: 30000 };
-               }
-           }
-       }
-   }
+    if (this.songs.length === 0) {
+        console.log('🎵 No songs available, skipping music segment');
+        await this.delay(30000);
+        return { duration: 30000 };
+    }
+    
+    for (let attempt = 0; attempt < 3; attempt++) {
+        const randomSong = this.songs[Math.floor(Math.random() * this.songs.length)];
+        const trackName = this.getTrackName(randomSong);
+        
+        try {
+            console.log(`🎵 Attempting to play: ${randomSong.split('/').pop()} (attempt ${attempt + 1})`);
+            
+            return new Promise((resolve) => {
+                const songStartTime = Date.now();
+                
+                this.audioPlayer.onerror = (error) => {
+                    const songDuration = Date.now() - songStartTime;
+                    console.error(`❌ Song failed to play:`, error);
+                    this.hideNowPlaying();
+                    resolve({ duration: songDuration });
+                };
+                
+                this.audioPlayer.oncanplaythrough = async () => {
+                    console.log(`✅ Song loaded successfully: ${randomSong.split('/').pop()}`);
+                    this.showNowPlaying(trackName);
+                    
+                    // Start with fade in
+                    await this.fadeInNewTrack();
+                    
+                    // Schedule DJ drops during the song
+                    this.scheduleDJDrops();
+                };
+                
+                this.audioPlayer.onended = async () => {
+                    const songDuration = Date.now() - songStartTime;
+                    console.log(`🎵 Song finished playing (${Math.round(songDuration/1000)}s)`);
+                    this.hideNowPlaying();
+                    resolve({ duration: songDuration });
+                };
+                
+                this.audioPlayer.src = randomSong;
+                
+                const timeout = setTimeout(async () => {
+                    const songDuration = Date.now() - songStartTime;
+                    console.log(`⏰ Song timeout reached (${Math.round(songDuration/1000)}s)`);
+                    await this.fadeOutAndChangeTrack();
+                    this.hideNowPlaying();
+                    resolve({ duration: songDuration, timedOut: true });
+                }, 240000);
+                
+                this.audioPlayer.onended = async () => {
+                    clearTimeout(timeout);
+                    const songDuration = Date.now() - songStartTime;
+                    await this.fadeOutAndChangeTrack();
+                    this.hideNowPlaying();
+                    resolve({ duration: songDuration });
+                };
+            });
+            
+        } catch (error) {
+            console.error(`❌ Song attempt ${attempt + 1} failed:`, error);
+            if (attempt === 2) {
+                console.log('🎵 All song attempts failed, continuing without music');
+                this.hideNowPlaying();
+                await this.delay(30000);
+                return { duration: 30000 };
+            }
+        }
+    }
+}
+
+        async duckMusicForSpeech(audioUrl, speechText, voiceType = 'porky') {
+    return new Promise((resolve) => {
+        // Fade music down to 20%
+        this.fadeAudioVolume(1.0, 0.2, 1000);
+        
+        setTimeout(async () => {
+            // Play speech
+            const speechAudio = new Audio(audioUrl);
+            speechAudio.volume = 0.8;
+            
+            speechAudio.onended = () => {
+                // Fade music back up after speech
+                setTimeout(() => {
+                    this.fadeAudioVolume(0.2, 1.0, 1000);
+                    URL.revokeObjectURL(audioUrl);
+                    resolve();
+                }, 500);
+            };
+            
+            speechAudio.onerror = () => {
+                this.fadeAudioVolume(0.2, 1.0, 1000);
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+            };
+            
+            speechAudio.play().catch(() => {
+                this.fadeAudioVolume(0.2, 1.0, 1000);
+                resolve();
+            });
+        }, 1200); // Wait for music to duck down
+    });
+}
+
+fadeAudioVolume(fromVolume, toVolume, duration) {
+    if (!this.audioPlayer) return;
+    
+    const steps = 20;
+    const stepTime = duration / steps;
+    const volumeStep = (toVolume - fromVolume) / steps;
+    let currentStep = 0;
+    
+    const fadeInterval = setInterval(() => {
+        currentStep++;
+        const newVolume = fromVolume + (volumeStep * currentStep);
+        this.audioPlayer.volume = Math.max(0, Math.min(1, newVolume));
+        
+        if (currentStep >= steps) {
+            clearInterval(fadeInterval);
+            this.audioPlayer.volume = toVolume;
+        }
+    }, stepTime);
+}
+
+async generateDJDrop() {
+    const djDrops = [
+        "OINK OINK! You're listening to the hottest crypto radio on the blockchain!",
+        "This is Porky on OINK FM, keeping you updated while the charts go wild!",
+        "Hope you're stacking those sats while jamming to these beats!",
+        "OINK FM - where memes meet music and portfolios pump!",
+        "Shoutout to all the diamond hands hodling through this track!",
+        "This next section goes out to all the DeFi degens listening live!",
+        "Porky here reminding you - not financial advice, just good vibes!",
+        "OINK FM 24/7 - pumping beats and crypto heat!",
+        "Keep those wallets secure and those speakers loud!",
+        "From the studio to your ears - this is your boy Porky!"
+    ];
+    
+    const randomDrop = djDrops[Math.floor(Math.random() * djDrops.length)];
+    
+    try {
+        const audioUrl = await this.generateTTSAudio(randomDrop, 'porky');
+        return { audioUrl, text: randomDrop };
+    } catch (error) {
+        console.error('DJ drop generation failed:', error);
+        return null;
+    }
+}
+
+async scheduleDJDrops() {
+    if (!this.isPlaying) return;
+    
+    // Schedule 2-3 random drops during the song
+    const dropCount = Math.floor(Math.random() * 2) + 2; // 2 or 3 drops
+    
+    for (let i = 0; i < dropCount; i++) {
+        const randomTime = Math.random() * 180000 + 30000; // Between 30s and 3.5min
+        
+        setTimeout(async () => {
+            if (this.isPlaying && this.audioPlayer && !this.audioPlayer.paused) {
+                console.log('🎙️ Porky jumping in with a DJ drop...');
+                
+                const djDrop = await this.generateDJDrop();
+                if (djDrop) {
+                    this.updateStatus('🎙️ Porky: DJ Drop!');
+                    await this.duckMusicForSpeech(djDrop.audioUrl, djDrop.text, 'porky');
+                    this.updateStatus('🎵 Music continuing...');
+                }
+            }
+        }, randomTime);
+    }
+}
 
    stop() {
        this.isPlaying = false;
