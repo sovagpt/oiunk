@@ -681,13 +681,13 @@ body {
 }
 
         .sponsor-ad {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0) rotate(360deg);
     width: 400px;
     height: 300px;
-    z-index: 30;
+    z-index: 9999;
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
@@ -696,7 +696,7 @@ body {
 }
 
 .sponsor-ad.visible {
-    display: block;
+    display: block !important;
     animation: sponsorSpinIn 1s ease-out forwards;
 }
 
