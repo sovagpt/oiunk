@@ -679,6 +679,74 @@ body {
 .reporter-option.perky.active {
     background: #ff1493;
 }
+
+        .sponsor-ad {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0) rotate(360deg);
+    width: 400px;
+    height: 300px;
+    z-index: 30;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    border: 4px solid #ff1493;
+    display: none;
+}
+
+.sponsor-ad.visible {
+    display: block;
+    animation: sponsorSpinIn 1s ease-out forwards;
+}
+
+.sponsor-ad.spinning-out {
+    animation: sponsorSpinOut 1s ease-in forwards;
+}
+
+@keyframes sponsorSpinIn {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(360deg);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes sponsorSpinOut {
+    0% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0) rotate(-360deg);
+        opacity: 0;
+    }
+}
+
+.sponsor-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.sponsor-label {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(45deg, #ff1493, #ff69b4);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    font-family: 'Bright Aura', 'Comic Sans MS', cursive, sans-serif;
+    box-shadow: 0 5px 15px rgba(255, 20, 147, 0.5);
+}
     </style>
 </head>
 <body>
@@ -726,20 +794,29 @@ body {
 
             <!-- Social Media Feed -->
             <div id="socialFeed" class="social-feed">
-                <div class="social-feed-header">
-                    <span>💬</span>
-                    <span>LIVE CHAT</span>
-                    <span style="margin-left: auto; font-size: 11px;">🔴 LIVE</span>
-                </div>
-                <div id="socialFeedContent" class="social-feed-content">
-                    <div class="social-message">
-                        <span class="social-username">OinkFan420</span>
-                        <span class="social-timestamp">now</span>
-                        <div class="social-message-text">OINK FM is fire! 🔥 Porky dropping alpha!</div>
-                    </div>
-                </div>
-            </div>
+    <div class="social-feed-header">
+        <span>💬</span>
+        <span>LIVE CHAT</span>
+        <span style="margin-left: auto; font-size: 11px;">🔴 LIVE</span>
+    </div>
+    <div id="socialFeedContent" class="social-feed-content">
+        <div class="social-message">
+            <span class="social-username">OinkFan420</span>
+            <span class="social-timestamp">now</span>
+            <div class="social-message-text">OINK FM is fire! 🔥 Porky dropping alpha!</div>
         </div>
+    </div>
+</div>
+
+<!-- Sponsor Ad Overlay -->
+<div id="sponsorAd" class="sponsor-ad">
+    <div class="sponsor-label">📺 SPONSOR MESSAGE</div>
+    <video id="sponsorVideo" class="sponsor-video" muted>
+        Your browser does not support the video tag.
+    </video>
+</div>
+
+</div>
 
         <div class="status-display" id="statusDisplay">
             🎙️ Ready to broadcast... Click Start Show!
@@ -1937,10 +2014,14 @@ Loading music library from GitHub...
                    this.justCompletedReport = false;
                    this.updateStatus("🎵 Post-report music time...");
                    await this.playRandomSong();
-                   
-                   if (this.isPlaying) {
-                       await this.delay(2000);
-                   }
+
+// Check for sponsor ad after song
+if (this.isPlaying) {
+    const adPlayed = await this.checkForSponsorAd();
+    if (!adPlayed) {
+        await this.delay(2000);
+    }
+}
                    continue;
                }
                
@@ -2266,6 +2347,134 @@ async scheduleDJDrops() {
             }
         }, randomTime);
     }
+}
+
+        async checkForSponsorAd() {
+    // 8% chance of sponsor ad after song
+    const shouldPlayAd = Math.random() < 0.08;
+    
+    if (shouldPlayAd) {
+        console.log('🎬 Time for a sponsor message!');
+        await this.playSponsorAd();
+        return true; // Ad was played
+    }
+    return false; // No ad
+}
+
+async playSponsorAd() {
+    try {
+        this.updateStatus('📺 Now a message from our sponsors...');
+        
+        // Play sponsor intro
+        const sponsorIntroUrl = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/sponsor.mp3';
+        await this.playAudioWithAnimation(sponsorIntroUrl, 'porky');
+        
+        await this.delay(500);
+        
+        // Show spinning ad
+        await this.showSponsorVideo();
+        
+        await this.delay(500);
+        
+        // Play thank you message
+        const sponsorOutroUrl = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/sponsor1.mp3';
+        await this.playAudioWithAnimation(sponsorOutroUrl, 'porky');
+        
+        // Hide ad
+        await this.hideSponsorVideo();
+        
+        this.updateStatus('📻 Back to regular programming!');
+        
+    } catch (error) {
+        console.error('Sponsor ad failed:', error);
+        await this.hideSponsorVideo();
+    }
+}
+
+async showSponsorVideo() {
+    return new Promise(async (resolve) => {
+        const sponsorAd = document.getElementById('sponsorAd');
+        const sponsorVideo = document.getElementById('sponsorVideo');
+        
+        if (!sponsorAd || !sponsorVideo) {
+            resolve();
+            return;
+        }
+        
+        // Pick random ad (1-5)
+        const adNumber = Math.floor(Math.random() * 5) + 1;
+        const videoUrl = `https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/video/ad${adNumber}.mp4`;
+        
+        console.log(`🎬 Playing sponsor ad: ad${adNumber}.mp4`);
+        
+        sponsorVideo.src = videoUrl;
+        sponsorAd.classList.add('visible');
+        
+        // Wait for spin-in animation
+        setTimeout(() => {
+            sponsorVideo.play().catch(e => {
+                console.error('Video play failed:', e);
+            });
+            
+            // Video duration + a bit extra
+            setTimeout(() => {
+                resolve();
+            }, 9000); // 8 second video + 1 second buffer
+        }, 1000);
+    });
+}
+
+async hideSponsorVideo() {
+    return new Promise((resolve) => {
+        const sponsorAd = document.getElementById('sponsorAd');
+        const sponsorVideo = document.getElementById('sponsorVideo');
+        
+        if (!sponsorAd || !sponsorVideo) {
+            resolve();
+            return;
+        }
+        
+        sponsorAd.classList.add('spinning-out');
+        
+        setTimeout(() => {
+            sponsorAd.classList.remove('visible', 'spinning-out');
+            sponsorVideo.pause();
+            sponsorVideo.src = '';
+            resolve();
+        }, 1000);
+    });
+}
+
+async playAudioWithAnimation(audioUrl, voiceType = 'porky') {
+    return new Promise((resolve) => {
+        // Show character talking
+        if (voiceType === 'porky') {
+            this.showPorkyTalking();
+        } else {
+            this.showPerkyReporting();
+        }
+        
+        const audio = new Audio(audioUrl);
+        audio.volume = 1.0;
+        
+        audio.onended = () => {
+            // Go back to studio
+            this.showStudio();
+            URL.revokeObjectURL(audioUrl);
+            resolve();
+        };
+        
+        audio.onerror = () => {
+            this.showStudio();
+            URL.revokeObjectURL(audioUrl);
+            resolve();
+        };
+        
+        audio.play().catch(() => {
+            this.showStudio();
+            resolve();
+        });
+    });
 }
 
    stop() {
