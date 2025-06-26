@@ -82,7 +82,7 @@ body {
     align-items: center;
     height: 100%;
     white-space: nowrap;
-    animation: scroll-ticker 3200s linear infinite;
+    animation: scroll-ticker 3200s linear infinite !important;
     font-family: 'Bright Aura', 'Comic Sans MS', cursive, sans-serif;
     font-weight: bold;
     font-size: 16px;
@@ -2156,7 +2156,7 @@ async fadeInNewTrack() {
         setTimeout(async () => {
             // Play speech
             const speechAudio = new Audio(audioUrl);
-            speechAudio.volume = 0.8;
+            speechAudio.volume = 1.0;
             
             speechAudio.onended = () => {
                 // Fade music back up after speech
@@ -2202,38 +2202,44 @@ fadeAudioVolume(fromVolume, toVolume, duration) {
 }
 
 async generateDJDrop() {
-    const djDrops = [
-        "OINK OINK! You're listening to the hottest crypto radio on the blockchain!",
-        "This is Porky on OINK FM, keeping you updated while the charts go wild!",
-        "Hope you're stacking those sats while jamming to these beats!",
-        "OINK FM - where memes meet music and portfolios pump!",
-        "Shoutout to all the diamond hands hodling through this track!",
-        "This next section goes out to all the DeFi degens listening live!",
-        "Porky here reminding you - not financial advice, just good vibes!",
-        "OINK FM 24/7 - pumping beats and crypto heat!",
-        "Keep those wallets secure and those speakers loud!",
-        "From the studio to your ears - this is your boy Porky!"
+    const djDropFiles = [
+        'djdrop001.mp3',
+        'djdrop002.mp3', 
+        'djdrop003.mp3',
+        'djdrop004.mp3',
+        'djdrop005.mp3',
+        'djdrop006.mp3',
+        'djdrop007.mp3',
+        'djdrop008.mp3',
+        'djdrop009.mp3',
+        'djdrop010.mp3'
     ];
     
-    const randomDrop = djDrops[Math.floor(Math.random() * djDrops.length)];
+    const randomDrop = djDropFiles[Math.floor(Math.random() * djDropFiles.length)];
+    const audioUrl = `https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/djdrops/${randomDrop}`;
     
     try {
-        const audioUrl = await this.generateTTSAudio(randomDrop, 'porky');
-        return { audioUrl, text: randomDrop };
+        // Test if the file exists
+        const response = await fetch(audioUrl, { method: 'HEAD' });
+        if (response.ok) {
+            return { audioUrl, text: `Playing ${randomDrop}` };
+        } else {
+            console.log(`DJ drop ${randomDrop} not found`);
+            return null;
+        }
     } catch (error) {
-        console.error('DJ drop generation failed:', error);
+        console.error('DJ drop file check failed:', error);
         return null;
     }
 }
-
 async scheduleDJDrops() {
     if (!this.isPlaying) return;
     
-    // Schedule 2-3 random drops during the song
-    const dropCount = Math.floor(Math.random() * 2) + 2; // 2 or 3 drops
+    // Schedule only 1-2 drops during the song
+    const dropCount = Math.floor(Math.random() * 2) + 1; // 1 or 2 drops
     
     for (let i = 0; i < dropCount; i++) {
-        const randomTime = Math.random() * 180000 + 30000; // Between 30s and 3.5min
+        const randomTime = Math.random() * 120000 + 60000; // Between 1min and 3min into song
         
         setTimeout(async () => {
             if (this.isPlaying && this.audioPlayer && !this.audioPlayer.paused) {
@@ -2244,6 +2250,8 @@ async scheduleDJDrops() {
                     this.updateStatus('🎙️ Porky: DJ Drop!');
                     await this.duckMusicForSpeech(djDrop.audioUrl, djDrop.text, 'porky');
                     this.updateStatus('🎵 Music continuing...');
+                } else {
+                    console.log('No DJ drop files available - skipping');
                 }
             }
         }, randomTime);
