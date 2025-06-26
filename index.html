@@ -1034,7 +1034,7 @@ Loading music library from GitHub...
 
     showNowPlaying(trackName) {
     if (this.nowPlayingTrack && this.nowPlaying) {
-        this.nowPlayingTrack.textContent = `🎵 ${trackName}`;
+        this.nowPlayingTrack.textContent = trackName;
         this.nowPlaying.classList.add('visible');
         console.log(`🎵 Now Playing: ${trackName}`);
     }
@@ -2240,7 +2240,7 @@ async fadeInNewTrack() {
         setTimeout(async () => {
             // Play speech
             const speechAudio = new Audio(audioUrl);
-            speechAudio.volume = 1.0;
+            speechAudio.volume = 1.8;
             
             speechAudio.onended = () => {
                 // Go back to studio/blinking when speech ends
@@ -2351,7 +2351,7 @@ async scheduleDJDrops() {
 
         async checkForSponsorAd() {
     // 8% chance of sponsor ad after song
-    const shouldPlayAd = Math.random() < 0.08;
+    const shouldPlayAd = Math.random() < 1.0;
     
     if (shouldPlayAd) {
         console.log('🎬 Time for a sponsor message!');
