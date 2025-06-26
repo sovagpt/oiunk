@@ -72,11 +72,9 @@ body {
     left: 0;
     right: 0;
     height: 60px;
-    background: linear-gradient(90deg, #000000, #1a1a1a, #333333, #1a1a1a, #000000);
-    border-bottom: 4px solid #ff1493;
+    background: transparent;
     z-index: 15;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.9);
 }
 
 .ticker-content {
@@ -84,12 +82,12 @@ body {
     align-items: center;
     height: 100%;
     white-space: nowrap;
-    animation: scroll-ticker 60s linear infinite;
-    font-family: 'Arial', sans-serif;
-    font-weight: 900;
-    font-size: 18px;
+    animation: scroll-ticker 180s linear infinite;
+    font-family: 'Bright Aura', 'Comic Sans MS', cursive, sans-serif;
+    font-weight: bold;
+    font-size: 16px;
     color: #ffffff;
-    text-shadow: 2px 2px 4px #000000;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     will-change: transform;
     backface-visibility: hidden;
     transform: translateZ(0);
@@ -106,33 +104,36 @@ body {
 
 .ticker-item {
     display: inline-block;
-    margin-right: 60px;
-    padding: 8px 20px;
-    background: rgba(255, 20, 147, 0.2);
-    border-radius: 25px;
-    border: 2px solid #ff1493;
-    box-shadow: 0 0 10px rgba(255, 20, 147, 0.3);
-    backdrop-filter: blur(5px);
-    min-width: 180px;
+    margin-right: 40px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px 15px 15px 5px;
+    border: none;
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.4), 
+                inset -2px -2px 4px rgba(0, 0, 0, 0.1);
+    transform: perspective(100px) rotateX(5deg) rotateY(-5deg);
+    min-width: 120px;
     text-align: center;
+    color: #333;
+    font-family: 'Bright Aura', 'Comic Sans MS', cursive, sans-serif;
 }
 
 .coin-price {
-    color: #ff1493;
-    font-weight: 900;
-    text-shadow: 2px 2px 4px #000000;
+    color: #4ecdc4;
+    font-weight: bold;
+    text-shadow: none;
 }
 
 .price-up {
     color: #00ff41;
-    text-shadow: 2px 2px 4px #000000;
-    font-weight: 900;
+    text-shadow: none;
+    font-weight: bold;
 }
 
 .price-down {
     color: #ff3333;
-    text-shadow: 2px 2px 4px #000000;
-    font-weight: 900;
+    text-shadow: none;
+    font-weight: bold;
 }
 
 .ticker-breaking {
