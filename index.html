@@ -554,6 +554,11 @@
                  src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porky.gif" 
                  alt="Porky">
 
+            <!-- Porky Blink GIF -->
+            <img id="porkyBlink" class="porky-gif" 
+                 src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porkyblink.gif" 
+                 alt="Porky Blink">
+
             <!-- Perky Reporter -->
             <div id="perkyReporter" class="perky-reporter">
                 <img src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/reporter.gif" alt="Perky Reporter">
@@ -699,10 +704,13 @@ Loading music library from GitHub...
                 this.selectedReporter = 'porky';
                 this.justCompletedReport = false;
                 this.lastTickerContent = '';
+                this.blinkInterval = null;
+                this.isBlinking = false;
                 
                 // DOM elements
                 this.studioImg = document.getElementById('studioImg');
                 this.porkyGif = document.getElementById('porkyGif');
+                this.porkyBlink = document.getElementById('porkyBlink');
                 this.perkyReporter = document.getElementById('perkyReporter');
                 this.audioPlayer = document.getElementById('audioPlayer');
                 this.statusDisplay = document.getElementById('statusDisplay');
@@ -779,7 +787,55 @@ Loading music library from GitHub...
                 }
             }
 
-            setupEventListeners() {
+            startPorkyBlinking() {
+                if (this.blinkInterval) return; // Already blinking
+                
+                console.log('🐷 Starting Porky blink routine...');
+                
+                const scheduleNextBlink = () => {
+                    // Random interval between 2-5 seconds
+                    const nextBlinkTime = Math.random() * 3000 + 2000;
+                    
+                    this.blinkInterval = setTimeout(() => {
+                        this.doPorkyBlink();
+                        scheduleNextBlink(); // Schedule the next blink
+                    }, nextBlinkTime);
+                };
+                
+                scheduleNextBlink();
+            }
+            
+            doPorkyBlink() {
+                if (this.isBlinking) return; // Already mid-blink
+                if (!this.studioImg.classList.contains('visible')) return; // Only blink during studio view
+                
+                this.isBlinking = true;
+                
+                // Quick blink: show blink gif for 200ms then back to studio
+                this.studioImg.classList.remove('visible');
+                this.porkyBlink.classList.add('visible');
+                
+                setTimeout(() => {
+                    this.porkyBlink.classList.remove('visible');
+                    this.studioImg.classList.add('visible');
+                    this.isBlinking = false;
+                }, 200); // Quick 200ms blink
+            }
+            
+            stopPorkyBlinking() {
+                if (this.blinkInterval) {
+                    clearTimeout(this.blinkInterval);
+                    this.blinkInterval = null;
+                    console.log('🐷 Stopped Porky blinking');
+                }
+                
+                // Make sure we're back to studio view
+                if (this.isBlinking) {
+                    this.porkyBlink.classList.remove('visible');
+                    this.studioImg.classList.add('visible');
+                    this.isBlinking = false;
+                }
+            }
                 if (this.porkyGif) {
                     this.porkyGif.addEventListener('load', () => {
                         console.log('✅ Porky GIF loaded and ready');
@@ -1314,9 +1370,9 @@ Loading music library from GitHub...
 
             async showPerkyReporting() {
                 return new Promise((resolve) => {
-                    this.showStudio();
+                    this.showStudio(); // This will start blinking
                     this.perkyReporter.classList.add('visible');
-                    console.log('📺 Perky sliding into frame...');
+                    console.log('📺 Perky sliding into frame... Porky will blink in background');
                     setTimeout(resolve, 800);
                 });
             }
@@ -1554,6 +1610,7 @@ Loading music library from GitHub...
             stop() {
                 this.isPlaying = false;
                 this.audioPlayer.pause();
+                this.stopPorkyBlinking(); // Stop blinking when show stops
                 this.showStudio();
                 this.hidePerky();
                 this.updateStatus("📻 OINK FM is off the air");
@@ -1569,11 +1626,15 @@ Loading music library from GitHub...
             }
 
             showPorkyTalking() {
+                this.stopPorkyBlinking(); // Stop blinking when actively talking
                 if (this.studioImg) {
                     this.studioImg.classList.remove('visible');
                 }
                 if (this.porkyGif) {
                     this.porkyGif.classList.add('visible');
+                }
+                if (this.porkyBlink) {
+                    this.porkyBlink.classList.remove('visible');
                 }
                 if (this.perkyReporter) {
                     this.perkyReporter.classList.remove('visible');
@@ -1585,10 +1646,14 @@ Loading music library from GitHub...
                 if (this.porkyGif) {
                     this.porkyGif.classList.remove('visible');
                 }
+                if (this.porkyBlink) {
+                    this.porkyBlink.classList.remove('visible');
+                }
                 if (this.studioImg) {
                     this.studioImg.classList.add('visible');
                 }
-                console.log('🎵 Showing studio image');
+                this.startPorkyBlinking(); // Start blinking when in studio view
+                console.log('🎵 Showing studio image - Porky will blink randomly');
             }
 
             updateStatus(message) {
@@ -1614,20 +1679,25 @@ Loading music library from GitHub...
             }
 
             updateOverlayTicker(cryptoData) {
-    const tickerItems = cryptoData.map(coin => {
-        const isUp = coin.price_change_percentage_24h > 0;
-        const changeClass = isUp ? 'price-up' : 'price-down';
-        const arrow = isUp ? '📈' : '📉';
-        
-        return `<span class="ticker-item">
-            <span class="coin-price">${coin.symbol.toUpperCase()}</span> 
-            $${coin.current_price.toLocaleString()} 
-            <span class="${changeClass}">${arrow}${Math.abs(coin.price_change_percentage_24h).toFixed(1)}%</span>
-        </span>`;
-    }).join('');
-    
-    this.cryptoTicker.innerHTML = tickerItems.repeat(4);
-}
+                const tickerItems = cryptoData.map(coin => {
+                    const isUp = coin.price_change_percentage_24h > 0;
+                    const changeClass = isUp ? 'price-up' : 'price-down';
+                    const arrow = isUp ? '📈' : '📉';
+                    
+                    return `<span class="ticker-item">
+                        <span class="coin-price">${coin.symbol.toUpperCase()}</span> 
+                        ${coin.current_price.toFixed(2)} 
+                        <span class="${changeClass}">${arrow} ${Math.abs(coin.price_change_percentage_24h).toFixed(1)}%</span>
+                    </span>`;
+                }).join('');
+                
+                this.cryptoTicker.innerHTML = `
+                    🚀 LIVE CRYPTO PRICES 🚀 
+                    ${tickerItems} 
+                    💎 DIAMOND HANDS ONLY 💎 
+                    🐷 OINK FM - WHERE THE ALPHA FLOWS 🐷
+                `;
+            }
 
             addBreakingToTicker(breakingNews) {
                 // Don't interfere with smooth crypto scrolling for breaking news
