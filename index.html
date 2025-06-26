@@ -2408,7 +2408,25 @@ async showSponsorVideo() {
         console.log(`🎬 Playing sponsor ad: ad${adNumber}.mp4`);
         
         sponsorVideo.src = videoUrl;
-        sponsorAd.classList.add('visible');
+console.log('🎬 Video URL:', videoUrl);
+console.log('🎬 Sponsor ad element:', sponsorAd);
+console.log('🎬 Video element:', sponsorVideo);
+
+// Add error handling
+sponsorVideo.onerror = (e) => {
+    console.error('🎬 Video failed to load:', e);
+    console.error('🎬 Video URL that failed:', videoUrl);
+};
+
+sponsorVideo.onloadstart = () => {
+    console.log('🎬 Video started loading...');
+};
+
+sponsorVideo.oncanplay = () => {
+    console.log('🎬 Video can play!');
+};
+
+sponsorAd.classList.add('visible');
         
         // Wait for spin-in animation
         setTimeout(() => {
