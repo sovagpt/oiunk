@@ -540,7 +540,7 @@
             <!-- Sliding News Ticker Overlay -->
             <div class="ticker-overlay">
                 <div class="ticker-content" id="tickerContent">
-                    <span class="ticker-item" id="cryptoTicker">Loading crypto prices...</span>
+                    <span id="cryptoTicker">Loading crypto prices...</span>
                 </div>
             </div>
 
@@ -1613,25 +1613,20 @@ Loading music library from GitHub...
             }
 
             updateOverlayTicker(cryptoData) {
-                const tickerItems = cryptoData.map(coin => {
-                    const isUp = coin.price_change_percentage_24h > 0;
-                    const changeClass = isUp ? 'price-up' : 'price-down';
-                    const arrow = isUp ? '📈' : '📉';
-                    
-                    return `<span class="ticker-item">
-                        <span class="coin-price">${coin.symbol.toUpperCase()}</span> 
-                        ${coin.current_price.toFixed(2)} 
-                        <span class="${changeClass}">${arrow} ${Math.abs(coin.price_change_percentage_24h).toFixed(1)}%</span>
-                    </span>`;
-                }).join('');
-                
-                this.cryptoTicker.innerHTML = `
-                    🚀 LIVE CRYPTO PRICES 🚀 
-                    ${tickerItems} 
-                    💎 DIAMOND HANDS ONLY 💎 
-                    🐷 OINK FM - WHERE THE ALPHA FLOWS 🐷
-                `;
-            }
+    const tickerItems = cryptoData.map(coin => {
+        const isUp = coin.price_change_percentage_24h > 0;
+        const changeClass = isUp ? 'price-up' : 'price-down';
+        const arrow = isUp ? '📈' : '📉';
+        
+        return `<span class="ticker-item">
+            <span class="coin-price">${coin.symbol.toUpperCase()}</span> 
+            $${coin.current_price.toLocaleString()} 
+            <span class="${changeClass}">${arrow}${Math.abs(coin.price_change_percentage_24h).toFixed(1)}%</span>
+        </span>`;
+    }).join('');
+    
+    this.cryptoTicker.innerHTML = tickerItems.repeat(4);
+}
 
             addBreakingToTicker(breakingNews) {
                 // Don't interfere with smooth crypto scrolling for breaking news
