@@ -1450,6 +1450,16 @@ async playPreloadedAudio(voiceType = 'porky') {
         }
     }
 
+    async ensureAudioReady(script, voiceType = 'porky') {
+    if (this.preloadedAudio[voiceType]) {
+        console.log(`✅ ${voiceType} audio already preloaded`);
+        return;
+    }
+    
+    console.log(`🎵 Just-in-time preload for ${voiceType}...`);
+    await this.preloadNextAudio(script, voiceType);
+}
+
     async playAudio(audioUrl) {
         if (audioUrl) {
             return new Promise((resolve) => {
@@ -1738,6 +1748,9 @@ async playPreloadedAudio(voiceType = 'porky') {
                     }
                     
                     if (nextRadioScript) {
+    // Ensure audio is ready just before speaking
+    await this.ensureAudioReady(nextRadioScript, 'porky');
+    
     this.showPorkyTalking();
     this.updateStatus("🎙️ Porky is dropping knowledge...");
     
@@ -1757,33 +1770,48 @@ async playPreloadedAudio(voiceType = 'porky') {
                     this.updateStatus("🎵 Now spinning tracks...");
                     
                     const backgroundGeneration = this.generateNextSegment(queuedTopics);
-                    
-                    await this.playRandomSong();
-                    
-                    try {
+const musicPromise = this.playRandomSong();
+
+let audioPreloadPromise = null;
+
+try {
     const result = await backgroundGeneration;
     nextRadioScript = result.content;
     nextCryptoData = result.cryptoData;
+    console.log("✅ Next segment generated!");
     
-    // Preload Porky's audio while music is still playing
-    this.preloadNextAudio(nextRadioScript, 'porky');
+    // Start audio preloading, but time it to finish close to when music ends
+    const musicResult = await musicPromise;
+    const estimatedSongLength = musicResult?.duration || 180000; // Default 3 minutes
     
-    console.log("✅ Next segment ready! Audio preloading...");
+    // If music was very short, preload immediately
+    if (estimatedSongLength < 30000) {
+        console.log("🎵 Short song detected, preloading audio now...");
+        audioPreloadPromise = this.preloadNextAudio(nextRadioScript, 'porky');
+    } else {
+        // For longer songs, we already have the script ready, preload just before next speech
+        console.log("🎵 Audio will be preloaded just-in-time for next segment");
+    }
+    
 } catch (error) {
     console.error("Background generation failed:", error);
+    await musicPromise; // Still wait for music to finish
 }
-                    
-                    if (this.isPlaying) {
-                        await this.delay(2000);
-                    }
-                    
-                } catch (error) {
-                    console.error('Error in show loop:', error);
-                    this.updateStatus("❌ Something went wrong, retrying...");
-                    await this.delay(30000);
-                }
-            }
-        }
+
+// Ensure audio is ready
+if (audioPreloadPromise) {
+    await audioPreloadPromise;
+}
+
+if (this.isPlaying) {
+    await this.delay(2000);
+}
+
+} catch (error) {
+    console.error('Error in show loop:', error);
+    this.updateStatus("❌ Something went wrong, retrying...");
+    await this.delay(30000);
+}
 
         async playRandomSong() {
             if (this.songs.length === 0) {
@@ -1795,6 +1823,7 @@ async playPreloadedAudio(voiceType = 'porky') {
             for (let attempt = 0; attempt < 3; attempt++) {
                 const randomSong = this.songs[Math.floor(Math.random() * this.songs.length)];
                 const trackName = this.getTrackName(randomSong);
+                const songStartTime = Date.now();
                 
                 try {
                     console.log(`🎵 Attempting to play: ${randomSong.split('/').pop()} (attempt ${attempt + 1})`);
@@ -1818,24 +1847,27 @@ async playPreloadedAudio(voiceType = 'porky') {
                         };
                         
                         this.audioPlayer.onended = () => {
-                            console.log(`🎵 Song finished playing`);
-                            this.hideNowPlaying();
-                            resolve();
-                        };
+    const songDuration = Date.now() - songStartTime;
+    console.log(`🎵 Song finished playing (${Math.round(songDuration/1000)}s)`);
+    this.hideNowPlaying();
+    resolve({ duration: songDuration });
+};
                         
                         this.audioPlayer.src = randomSong;
                         
                         const timeout = setTimeout(() => {
-                            console.log(`⏰ Song timeout reached`);
-                            this.hideNowPlaying();
-                            resolve();
-                        }, 240000);
-                        
-                        this.audioPlayer.onended = () => {
-                            clearTimeout(timeout);
-                            this.hideNowPlaying();
-                            resolve();
-                        };
+    const songDuration = Date.now() - songStartTime;
+    console.log(`⏰ Song timeout reached (${Math.round(songDuration/1000)}s)`);
+    this.hideNowPlaying();
+    resolve({ duration: songDuration, timedOut: true });
+}, 240000);
+
+this.audioPlayer.onended = () => {
+    clearTimeout(timeout);
+    const songDuration = Date.now() - songStartTime;
+    this.hideNowPlaying();
+    resolve({ duration: songDuration });
+};
                     });
                     
                 } catch (error) {
