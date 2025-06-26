@@ -2150,6 +2150,9 @@ async fadeInNewTrack() {
 
         async duckMusicForSpeech(audioUrl, speechText, voiceType = 'porky') {
     return new Promise((resolve) => {
+        // Show Porky talking animation
+        this.showPorkyTalking();
+        
         // Fade music down to 20%
         this.fadeAudioVolume(1.0, 0.2, 1000);
         
@@ -2159,6 +2162,9 @@ async fadeInNewTrack() {
             speechAudio.volume = 1.0;
             
             speechAudio.onended = () => {
+                // Go back to studio/blinking when speech ends
+                this.showStudio();
+                
                 // Fade music back up after speech
                 setTimeout(() => {
                     this.fadeAudioVolume(0.2, 1.0, 1000);
@@ -2168,12 +2174,16 @@ async fadeInNewTrack() {
             };
             
             speechAudio.onerror = () => {
+                // Go back to studio if audio fails
+                this.showStudio();
                 this.fadeAudioVolume(0.2, 1.0, 1000);
                 URL.revokeObjectURL(audioUrl);
                 resolve();
             };
             
             speechAudio.play().catch(() => {
+                // Go back to studio if play fails
+                this.showStudio();
                 this.fadeAudioVolume(0.2, 1.0, 1000);
                 resolve();
             });
