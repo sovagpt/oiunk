@@ -1216,7 +1216,7 @@ Loading music library from GitHub...
         }
     }
 
-    async addSocialMessage(username, text, type = '', isVip = false) {
+        async addSocialMessage(username, text, type = '', isVip = false) {
     if (!this.socialFeedContent) return;
 
     const userClass = isVip ? 'vip' : (type === 'diamond' ? 'diamond' : '');
@@ -1236,7 +1236,7 @@ Loading music library from GitHub...
     if (messages.length > 15) {
         messages[messages.length - 1].remove();
     }
-}    
+}
 
     async startSocialFeedForTopic(topicContent, cryptoData) {
         try {
