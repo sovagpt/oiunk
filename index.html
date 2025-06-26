@@ -49,6 +49,74 @@
             opacity: 0.9;
         }
 
+        .now-playing {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    height: 80px;
+    background: linear-gradient(135deg, #000000, #1a1a1a, #333333);
+    border: 3px solid #ff1493;
+    border-radius: 15px;
+    z-index: 12;
+    display: none;
+    padding: 15px 25px;
+    box-shadow: 0 8px 25px rgba(255, 20, 147, 0.4);
+    backdrop-filter: blur(10px);
+}
+
+.now-playing.visible {
+    display: flex;
+    align-items: center;
+    animation: slideUpFade 0.5s ease-out;
+}
+
+@keyframes slideUpFade {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.now-playing-icon {
+    color: #ff1493;
+    font-size: 24px;
+    margin-right: 20px;
+    animation: pulse-pink-icon 2s infinite;
+}
+
+@keyframes pulse-pink-icon {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.now-playing-info {
+    flex: 1;
+}
+
+.now-playing-label {
+    color: #ff1493;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.now-playing-track {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px #000000;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
         .visual-container {
             position: relative;
             width: 1403px;
@@ -556,15 +624,23 @@
 
             <!-- Porky Blink GIF -->
             <img id="porkyBlink" class="porky-gif" 
-                 src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porkyblink.gif" 
-                 alt="Porky Blink">
+     src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/porkyblink.gif" 
+     alt="Porky Blink">
 
-            <!-- Perky Reporter -->
-            <div id="perkyReporter" class="perky-reporter">
-                <img src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/reporter.gif" alt="Perky Reporter">
-                <div class="perky-badge">📺 PERKY LIVE</div>
-            </div>
-        </div>
+<!-- Perky Reporter -->
+<div id="perkyReporter" class="perky-reporter">
+    <img src="https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/images/reporter.gif" alt="Perky Reporter">
+    <div class="perky-badge">📺 PERKY LIVE</div>
+</div>  <!-- This closing div was missing! -->
+
+<!-- Now Playing Display -->
+<div id="nowPlaying" class="now-playing">
+    <div class="now-playing-icon">🎵</div>
+    <div class="now-playing-info">
+        <div class="now-playing-label">Now Playing</div>
+        <div id="nowPlayingTrack" class="now-playing-track">Loading...</div>
+    </div>
+</div>
 
         <div class="status-display" id="statusDisplay">
             🎙️ Ready to broadcast... Click Start Show!
