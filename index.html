@@ -2365,23 +2365,25 @@ async playSponsorAd() {
     try {
         this.updateStatus('📺 Now a message from our sponsors...');
         
-        // Play sponsor intro
+        // Play sponsor intro (2 seconds)
         const sponsorIntroUrl = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/sponsor.mp3';
         await this.playAudioWithAnimation(sponsorIntroUrl, 'porky');
         
+        // Small pause before video
         await this.delay(500);
         
-        // Show spinning ad
+        // Show video and wait for it to complete (8+ seconds)
         await this.showSponsorVideo();
         
+        // Small pause after video
         await this.delay(500);
         
-        // Play thank you message
+        // Hide ad with spin out (1 second)
+        await this.hideSponsorVideo();
+        
+        // Play thank you message (5 seconds)
         const sponsorOutroUrl = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/sponsor1.mp3';
         await this.playAudioWithAnimation(sponsorOutroUrl, 'porky');
-        
-        // Hide ad
-        await this.hideSponsorVideo();
         
         this.updateStatus('📻 Back to regular programming!');
         
