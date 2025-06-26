@@ -218,8 +218,8 @@ body {
 /* Now Playing - Simple Text Bottom Right */
 .now-playing {
     position: absolute;
-    bottom: 15px;
-    left: 50%;
+    bottom: 25px;
+    left: 60%;
     transform: translateX(-50%);
     z-index: 12;
     display: none;
@@ -273,35 +273,15 @@ body {
     left: 20px;
     bottom: 20px;
     width: 250px;
-    height: 200px;
+    height: 300px;
     z-index: 20;
     display: none;
     pointer-events: none;
 }
 
-.social-feed.visible {
-    display: block;
-    animation: slideInLeft 0.5s ease-out;
-}
-
-@keyframes slideInLeft {
-    0% {
-        opacity: 0;
-        transform: translateX(-100%);
-    }
-    100% {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.social-feed-header {
-    display: none;
-}
-
 .social-feed-content {
     height: 100%;
-    overflow: hidden;
+    overflow: visible;
     padding: 0;
     display: flex;
     flex-direction: column-reverse;
@@ -331,7 +311,12 @@ body {
 .social-message:nth-child(3) { opacity: 0.8; }
 .social-message:nth-child(4) { opacity: 0.7; }
 .social-message:nth-child(5) { opacity: 0.6; }
-.social-message:nth-child(n+6) { opacity: 0.5; }
+.social-message:nth-child(6) { opacity: 0.5; }
+.social-message:nth-child(7) { opacity: 0.4; }
+.social-message:nth-child(8) { opacity: 0.3; }
+.social-message:nth-child(9) { opacity: 0.2; }
+.social-message:nth-child(10) { opacity: 0.1; }
+.social-message:nth-child(n+11) { opacity: 0; }
 
 .social-message.crypto-bullish {
     background: rgba(255, 255, 255, 0.95);
@@ -1246,12 +1231,12 @@ Loading music library from GitHub...
     // Add to the beginning (newest on top)
     this.socialFeedContent.insertBefore(messageDiv, this.socialFeedContent.firstChild);
 
-    // Limit to 6 messages for the fade effect
+    // Keep more messages but let them fade out naturally
     const messages = this.socialFeedContent.querySelectorAll('.social-message');
-    if (messages.length > 6) {
+    if (messages.length > 15) {
         messages[messages.length - 1].remove();
     }
-}
+}    
 
     async startSocialFeedForTopic(topicContent, cryptoData) {
         try {
