@@ -811,9 +811,7 @@ body {
 <!-- Sponsor Ad Overlay -->
 <div id="sponsorAd" class="sponsor-ad">
     <div class="sponsor-label">📺 SPONSOR MESSAGE</div>
-    <video id="sponsorVideo" class="sponsor-video" muted>
-        Your browser does not support the video tag.
-    </video>
+    <video id="sponsorVideo" class="sponsor-video" muted autoplay preload="auto" playsinline></video>
 </div>
 
 </div>
@@ -2426,6 +2424,16 @@ sponsorVideo.onloadstart = () => {
 
 sponsorVideo.oncanplay = () => {
     console.log('🎬 Video can play!');
+    // Try to play immediately when ready
+    sponsorVideo.play().then(() => {
+        console.log('🎬 Video is now playing!');
+    }).catch(e => {
+        console.error('🎬 Video play failed:', e);
+        // Try alternative approach
+        setTimeout(() => {
+            sponsorVideo.play();
+        }, 500);
+    });
 };
 
 sponsorAd.classList.add('visible');
