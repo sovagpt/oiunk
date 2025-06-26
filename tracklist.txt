@@ -1,0 +1,12 @@
+track001=Tory Lanez - The Color Violet
+track002=Tommy Richman - MILLION DOLLAR BABY
+track003=Tate McRae - bloodonmyhands ft. Flo Milli
+track004=Skepta & WizKid - Energy (Stay Far Away)
+track005=Sabrina Carpenter - Espresso
+track006=Drake - Nokia
+track007=Jay Sean - Down ft Lil Wayne
+track008=Ice Spice, Central Cee - Did It First
+track009=Empire Of The Sun - Alive
+track010=Declan McKenna - Brazil
+track011=Chappell Roan - Good Luck, Babe!
+track012=BTS - Boy With Luv
