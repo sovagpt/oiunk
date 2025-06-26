@@ -79,13 +79,15 @@
             align-items: center;
             height: 100%;
             white-space: nowrap;
-            animation: scroll-ticker 45s linear infinite;
+            animation: scroll-ticker 60s linear infinite;
             font-family: 'Arial', sans-serif;
             font-weight: 900;
             font-size: 18px;
             color: #ffffff;
             text-shadow: 2px 2px 4px #000000;
             will-change: transform;
+            backface-visibility: hidden;
+            transform: translateZ(0);
         }
 
         @keyframes scroll-ticker {
@@ -1632,14 +1634,13 @@ Loading music library from GitHub...
             }
 
             addBreakingToTicker(breakingNews) {
-                // Add breaking news item to ticker
-                const breakingItem = `<span class="ticker-item ticker-breaking">🚨 BREAKING: ${breakingNews} 🚨</span>`;
-                const currentContent = this.cryptoTicker.innerHTML;
-                this.cryptoTicker.innerHTML = breakingItem + currentContent;
+                // Don't interfere with smooth crypto scrolling for breaking news
+                // Just update the bottom ticker instead
+                this.newsTicker.textContent = `🚨 BREAKING: ${breakingNews} 🚨`;
                 
-                // Remove breaking news after 30 seconds
+                // Reset to normal after 30 seconds
                 setTimeout(() => {
-                    this.cryptoTicker.innerHTML = currentContent;
+                    // Don't reset if there's newer data
                 }, 30000);
             }
 
