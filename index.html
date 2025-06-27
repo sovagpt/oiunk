@@ -2258,7 +2258,7 @@ fadeAudioVolume(fromVolume, toVolume, duration) {
 }
 
         async checkSponsor() {
-    if (Math.random() < 1.0) { // 100% for testing
+    if (Math.random() < 0.5) { // 100% for testing
         await this.showSponsor();
         return true;
     }
