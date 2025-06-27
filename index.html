@@ -2401,65 +2401,52 @@ async showSponsorVideo() {
             return;
         }
         
-        // Pick random ad (1-5)
         const adNumber = Math.floor(Math.random() * 5) + 1;
         const videoUrls = [
-    'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad5_rpxzor.mp4',
-    'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad2_qghmup.mp4',
-    'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad3_ziakab.mp4',
-    'https://res.cloudinary.com/degblqvla/video/upload/v1750983278/ad4_n3lpfj.mp4',
-    'https://res.cloudinary.com/degblqvla/video/upload/v1750983276/ad1_x5dujo.mp4'
-];
-
-const videoUrl = videoUrls[adNumber - 1];
+            'https://res.cloudinary.com/degblqvla/video/upload/v1750983276/ad1_x5dujo.mp4',
+            'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad2_qghmup.mp4',
+            'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad3_ziakab.mp4',
+            'https://res.cloudinary.com/degblqvla/video/upload/v1750983278/ad4_n3lpfj.mp4',
+            'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad5_rpxzor.mp4'
+        ];
+        const videoUrl = videoUrls[adNumber - 1];
         
         console.log(`🎬 Playing sponsor ad: ad${adNumber}.mp4`);
+        console.log('🎬 Video URL:', videoUrl);
         
+        // Set up event handlers BEFORE setting src
+        sponsorVideo.onended = () => {
+            console.log('🎬 Video finished playing!');
+            resolve();
+        };
+
+        sponsorVideo.onerror = (e) => {
+            console.error('🎬 Video failed to load:', e);
+            resolve(); // Continue even on error
+        };
+
+        sponsorVideo.oncanplay = () => {
+            console.log('🎬 Video can play!');
+        };
+        
+        // Show the overlay
+        sponsorAd.classList.add('visible');
+        
+        // Set source and play
         sponsorVideo.src = videoUrl;
-console.log('🎬 Video URL:', videoUrl);
-console.log('🎬 Sponsor ad element:', sponsorAd);
-console.log('🎬 Video element:', sponsorVideo);
-
-// Add error handling
-sponsorVideo.onerror = (e) => {
-    console.error('🎬 Video failed to load:', e);
-    console.error('🎬 Video URL that failed:', videoUrl);
-};
-
-sponsorVideo.onloadstart = () => {
-    console.log('🎬 Video started loading...');
-};
-
-sponsorVideo.oncanplay = () => {
-    console.log('🎬 Video can play!');
-    // Try to play immediately when ready
-    sponsorVideo.play().then(() => {
-        console.log('🎬 Video is now playing!');
-    }).catch(e => {
-        console.error('🎬 Video play failed:', e);
-        // Try alternative approach
-        setTimeout(() => {
-            sponsorVideo.play();
-        }, 500);
-    });
-};
-
-sponsorAd.classList.add('visible');
         
-        // Wait for spin-in animation
+        // Wait for spin animation, then play
         setTimeout(() => {
-            sponsorVideo.play().catch(e => {
-                console.error('Video play failed:', e);
-            });
-            
-            // Video duration + a bit extra
-            setTimeout(() => {
+            sponsorVideo.play().then(() => {
+                console.log('🎬 Video is now playing!');
+            }).catch(e => {
+                console.error('🎬 Video play failed:', e);
                 resolve();
-            }, 9000); // 8 second video + 1 second buffer
+            });
         }, 1000);
     });
 }
-
+        
 async hideSponsorVideo() {
     return new Promise((resolve) => {
         const sponsorAd = document.getElementById('sponsorAd');
