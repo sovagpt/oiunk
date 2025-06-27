@@ -1279,26 +1279,30 @@ Loading music library from GitHub...
 }
 
     async startSocialFeedForTopic(topicContent, cryptoData) {
-        try {
-            const messages = await this.generateSocialMessages(topicContent, cryptoData);
-            
-            for (let i = 0; i < messages.length; i++) {
-                setTimeout(() => {
-                    if (this.isPlaying) {
-                        const msg = messages[i];
-                        this.addSocialMessage(
-                            msg.username, 
-                            msg.text, 
-                            msg.type || '', 
-                            msg.username.includes('Whale') || msg.username.includes('VIP')
-                        );
-                    }
-                }, i * (Math.random() * 5000 + 10000));
-            }
-        } catch (error) {
-            console.error('Social feed error:', error);
+    console.log('🔥 STARTING SOCIAL FEED FOR TOPIC:', topicContent?.substring(0, 50));
+    
+    try {
+        const messages = await this.generateSocialMessages(topicContent, cryptoData);
+        console.log('🔥 GENERATED MESSAGES:', messages);
+        
+        for (let i = 0; i < messages.length; i++) {
+            setTimeout(() => {
+                if (this.isPlaying) {
+                    const msg = messages[i];
+                    console.log('🔥 ADDING MESSAGE:', msg.text);
+                    this.addSocialMessage(
+                        msg.username, 
+                        msg.text, 
+                        msg.type || '', 
+                        msg.username.includes('Whale') || msg.username.includes('VIP')
+                    );
+                }
+            }, i * (Math.random() * 5000 + 10000)); // Random delays between 10-15 seconds
         }
+    } catch (error) {
+        console.error('Social feed error:', error);
     }
+}
 
     async addTopic() {
         const content = this.topicInput.value.trim();
