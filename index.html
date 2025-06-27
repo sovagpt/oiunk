@@ -679,74 +679,6 @@ body {
 .reporter-option.perky.active {
     background: #ff1493;
 }
-
-        .sponsor-ad {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 400px !important;
-    height: 300px !important;
-    z-index: 99999 !important;
-    display: none !important;
-    background: rgba(0, 0, 0, 0.9) !important;
-    border-radius: 15px !important;
-    border: 4px solid #ff1493 !important;
-    overflow: hidden !important;
-}
-
-.sponsor-ad.visible {
-    display: block !important;
-    animation: sponsorSpinIn 1s ease-out forwards !important;
-}
-
-.sponsor-ad.spinning-out {
-    animation: sponsorSpinOut 1s ease-in forwards;
-}
-
-@keyframes sponsorSpinIn {
-    0% {
-        transform: translate(-50%, -50%) scale(0) rotate(360deg);
-        opacity: 0;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(1) rotate(0deg);
-        opacity: 1;
-    }
-}
-
-@keyframes sponsorSpinOut {
-    0% {
-        transform: translate(-50%, -50%) scale(1) rotate(0deg);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(0) rotate(-360deg);
-        opacity: 0;
-    }
-}
-
-.sponsor-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 10px;
-}
-
-.sponsor-label {
-    position: absolute;
-    top: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(45deg, #ff1493, #ff69b4);
-    color: white;
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-    font-family: 'Bright Aura', 'Comic Sans MS', cursive, sans-serif;
-    box-shadow: 0 5px 15px rgba(255, 20, 147, 0.5);
-}
     </style>
 </head>
 <body>
@@ -806,12 +738,6 @@ body {
             <div class="social-message-text">OINK FM is fire! 🔥 Porky dropping alpha!</div>
         </div>
     </div>
-</div>
-
-<!-- Sponsor Ad Overlay -->
-<div id="sponsorAd" class="sponsor-ad">
-    <div class="sponsor-label">📺 SPONSOR MESSAGE</div>
-    <video id="sponsorVideo" class="sponsor-video" muted autoplay preload="auto" playsinline></video>
 </div>
 
 </div>
@@ -2015,10 +1941,7 @@ Loading music library from GitHub...
 
 // Check for sponsor ad after song
 if (this.isPlaying) {
-    const adPlayed = await this.checkForSponsorAd();
-    if (!adPlayed) {
-        await this.delay(2000);
-    }
+    await this.delay(2000);
 }
                    continue;
                }
@@ -2345,159 +2268,6 @@ async scheduleDJDrops() {
             }
         }, randomTime);
     }
-}
-
-        async checkForSponsorAd() {
-    // 8% chance of sponsor ad after song
-    const shouldPlayAd = Math.random() < 1.0;
-    
-    if (shouldPlayAd) {
-        console.log('🎬 Time for a sponsor message!');
-        await this.playSponsorAd();
-        return true; // Ad was played
-    }
-    return false; // No ad
-}
-
-async playSponsorAd() {
-    try {
-        this.updateStatus('📺 Now a message from our sponsors...');
-        
-        // Play sponsor intro (2 seconds)
-        const sponsorIntroUrl = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/sponsor.mp3';
-        await this.playAudioWithAnimation(sponsorIntroUrl, 'porky');
-        
-        // Small pause before video
-        await this.delay(500);
-        
-        // Show video and wait for it to complete (8+ seconds)
-        await this.showSponsorVideo();
-        
-        // Small pause after video
-        await this.delay(500);
-        
-        // Hide ad with spin out (1 second)
-        await this.hideSponsorVideo();
-        
-        // Play thank you message (5 seconds)
-        const sponsorOutroUrl = 'https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/sponsor1.mp3';
-        await this.playAudioWithAnimation(sponsorOutroUrl, 'porky');
-        
-        this.updateStatus('📻 Back to regular programming!');
-        
-    } catch (error) {
-        console.error('Sponsor ad failed:', error);
-        await this.hideSponsorVideo();
-    }
-}
-
-async showSponsorVideo() {
-    return new Promise(async (resolve) => {
-        const sponsorAd = document.getElementById('sponsorAd');
-        const sponsorVideo = document.getElementById('sponsorVideo');
-        
-        if (!sponsorAd || !sponsorVideo) {
-            resolve();
-            return;
-        }
-        
-        const adNumber = Math.floor(Math.random() * 5) + 1;
-        const videoUrls = [
-            'https://res.cloudinary.com/degblqvla/video/upload/v1750983276/ad1_x5dujo.mp4',
-            'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad2_qghmup.mp4',
-            'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad3_ziakab.mp4',
-            'https://res.cloudinary.com/degblqvla/video/upload/v1750983278/ad4_n3lpfj.mp4',
-            'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad5_rpxzor.mp4'
-        ];
-        const videoUrl = videoUrls[adNumber - 1];
-        
-        console.log(`🎬 Playing sponsor ad: ad${adNumber}.mp4`);
-        console.log('🎬 Video URL:', videoUrl);
-        
-        // Set up event handlers BEFORE setting src
-        sponsorVideo.onended = () => {
-            console.log('🎬 Video finished playing!');
-            resolve();
-        };
-
-        sponsorVideo.onerror = (e) => {
-            console.error('🎬 Video failed to load:', e);
-            resolve(); // Continue even on error
-        };
-
-        sponsorVideo.oncanplay = () => {
-            console.log('🎬 Video can play!');
-        };
-        
-        // Show the overlay
-        sponsorAd.classList.add('visible');
-        
-        // Set source and play
-        sponsorVideo.src = videoUrl;
-        
-        // Wait for spin animation, then play
-        setTimeout(() => {
-            sponsorVideo.play().then(() => {
-                console.log('🎬 Video is now playing!');
-            }).catch(e => {
-                console.error('🎬 Video play failed:', e);
-                resolve();
-            });
-        }, 1000);
-    });
-}
-        
-async hideSponsorVideo() {
-    return new Promise((resolve) => {
-        const sponsorAd = document.getElementById('sponsorAd');
-        const sponsorVideo = document.getElementById('sponsorVideo');
-        
-        if (!sponsorAd || !sponsorVideo) {
-            resolve();
-            return;
-        }
-        
-        sponsorAd.classList.add('spinning-out');
-        
-        setTimeout(() => {
-            sponsorAd.classList.remove('visible', 'spinning-out');
-            sponsorVideo.pause();
-            sponsorVideo.src = '';
-            resolve();
-        }, 1000);
-    });
-}
-
-async playAudioWithAnimation(audioUrl, voiceType = 'porky') {
-    return new Promise((resolve) => {
-        // Show character talking
-        if (voiceType === 'porky') {
-            this.showPorkyTalking();
-        } else {
-            this.showPerkyReporting();
-        }
-        
-        const audio = new Audio(audioUrl);
-        audio.volume = 1.0;
-        
-        audio.onended = () => {
-            // Go back to studio
-            this.showStudio();
-            URL.revokeObjectURL(audioUrl);
-            resolve();
-        };
-        
-        audio.onerror = () => {
-            this.showStudio();
-            URL.revokeObjectURL(audioUrl);
-            resolve();
-        };
-        
-        audio.play().catch(() => {
-            this.showStudio();
-            resolve();
-        });
-    });
 }
 
    stop() {
