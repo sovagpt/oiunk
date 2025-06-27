@@ -1944,157 +1944,160 @@ Loading music library from GitHub...
    }
 
    async startShow() {
-       if (this.isPlaying) return;
-       
-       this.isPlaying = true;
-       this.justCompletedReport = false;
-       this.updateStatus("🎙️ OINK FM is going LIVE!");
-       
-       // Show social feed when show starts
-       this.showSocialFeed();
+    if (this.isPlaying) return;
+    
+    this.isPlaying = true;
+    this.justCompletedReport = false;
+    this.updateStatus("🎙️ OINK FM is going LIVE!");
+    
+    // Show social feed when show starts
+    this.showSocialFeed();
 
-       // Add welcome messages
-       setTimeout(() => {
-           this.addSocialMessage("OinkFM_Official", "🎙️ OINK FM is now LIVE! Welcome everyone!", "breaking", true);
-       }, 1000);
+    // Add welcome messages
+    setTimeout(() => {
+        this.addSocialMessage("OinkFM_Official", "🎙️ OINK FM is now LIVE! Welcome everyone!", "breaking", true);
+    }, 1000);
 
-       setTimeout(() => {
-           this.addSocialMessage("CommunityMod", "Drop your crypto takes in the chat! 💬", "meme", true);
-       }, 3000);
-       
-       let queuedTopics = [];
-       try {
-           const response = await fetch('/api/enhanced-chat?type=queue');
-           const data = await response.json();
-           queuedTopics = data.queue || [];
-       } catch (error) {
-           console.error('Failed to fetch queue:', error);
-       }
-       
-       let nextRadioScript = null;
-       let nextCryptoData = null;
-       
-       while (this.isPlaying) {
-           try {
-               if (this.justCompletedReport) {
-                   this.justCompletedReport = false;
-                   this.updateStatus("🎵 Post-report music time...");
-                   await this.playRandomSong();
-
-if (this.isPlaying) {
-    const adPlayed = await this.checkSponsor();
-    if (!adPlayed) {
-        await this.delay(2000);
+    setTimeout(() => {
+        this.addSocialMessage("CommunityMod", "Drop your crypto takes in the chat! 💬", "meme", true);
+    }, 3000);
+    
+    let queuedTopics = [];
+    try {
+        const response = await fetch('/api/enhanced-chat?type=queue');
+        const data = await response.json();
+        queuedTopics = data.queue || [];
+    } catch (error) {
+        console.error('Failed to fetch queue:', error);
+    }
+    
+    let nextRadioScript = null;
+    let nextCryptoData = null;
+    
+    while (this.isPlaying) {
+        try {
+            if (this.justCompletedReport) {
+                this.justCompletedReport = false;
+                this.updateStatus("🎵 Post-report music time...");
+                await this.playRandomSong();
+                
+                if (this.isPlaying) {
+                    const adPlayed = await this.checkSponsor();
+                    if (!adPlayed) {
+                        await this.delay(2000);
+                    }
+                }
+                continue;
+            }
+            
+            const urgentPerkyReport = queuedTopics.find(topic => 
+                topic.type === 'perky_report' || 
+                topic.reporter === 'perky'
+            );
+            
+            if (urgentPerkyReport) {
+                await this.handlePerkyReport(urgentPerkyReport);
+                
+                await this.removeTopic(urgentPerkyReport.id);
+                
+                const refreshResponse = await fetch('/api/enhanced-chat?type=queue');
+                const refreshData = await refreshResponse.json();
+                queuedTopics = refreshData.queue || [];
+                
+                continue;
+            }
+            
+            if (!nextRadioScript) {
+                nextCryptoData = await this.fetchCryptoNews();
+                if (nextCryptoData) {
+                    this.updateNewsTicker(nextCryptoData);
+                    this.updateStatus("🤖 Porky is preparing his thoughts...");
+                    
+                    const nextTopic = queuedTopics.find(topic => topic.type !== 'perky_report' && topic.reporter !== 'perky');
+                    nextRadioScript = await this.generateRadioContent(nextCryptoData, nextTopic);
+                    
+                    if (nextTopic) {
+                        await this.removeTopic(nextTopic.id);
+                        const refreshResponse = await fetch('/api/enhanced-chat?type=queue');
+                        const refreshData = await refreshResponse.json();
+                        queuedTopics = refreshData.queue || [];
+                    }
+                }
+            }
+            
+            if (nextRadioScript) {
+                // Ensure audio is ready just before speaking
+                await this.ensureAudioReady(nextRadioScript, 'porky');
+                
+                // Generate social feed for current topic
+                this.startSocialFeedForTopic(nextRadioScript, nextCryptoData);
+                
+                this.showPorkyTalking();
+                this.updateStatus("🎙️ Porky is dropping knowledge...");
+                
+                // Use preloaded audio if available, otherwise generate on the fly
+                if (this.preloadedAudio.porky) {
+                    await this.playPreloadedAudio('porky');
+                } else {
+                    const audioUrl = await this.generateTTSAudio(nextRadioScript, 'porky');
+                    await this.playAudio(audioUrl);
+                }
+                
+                nextRadioScript = null;
+                nextCryptoData = null;
+            }
+            
+            this.showStudio();
+            this.updateStatus("🎵 Now spinning tracks...");
+            
+            const backgroundGeneration = this.generateNextSegment(queuedTopics);
+            const musicPromise = this.playRandomSong();
+            
+            let audioPreloadPromise = null;
+            
+            try {
+                const result = await backgroundGeneration;
+                nextRadioScript = result.content;
+                nextCryptoData = result.cryptoData;
+                console.log("✅ Next segment generated!");
+                
+                // Start audio preloading, but time it to finish close to when music ends
+                const musicResult = await musicPromise;
+                const estimatedSongLength = musicResult?.duration || 180000; // Default 3 minutes
+                
+                // If music was very short, preload immediately
+                if (estimatedSongLength < 30000) {
+                    console.log("🎵 Short song detected, preloading audio now...");
+                    audioPreloadPromise = this.preloadNextAudio(nextRadioScript, 'porky');
+                } else {
+                    // For longer songs, we already have the script ready, preload just before next speech
+                    console.log("🎵 Audio will be preloaded just-in-time for next segment");
+                }
+                
+            } catch (error) {
+                console.error("Background generation failed:", error);
+                await musicPromise; // Still wait for music to finish
+            }
+            
+            // Ensure audio is ready
+            if (audioPreloadPromise) {
+                await audioPreloadPromise;
+            }
+            
+            if (this.isPlaying) {
+                const adPlayed = await this.checkSponsor();
+                if (!adPlayed) {
+                    await this.delay(2000);
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error in show loop:', error);
+            this.updateStatus("❌ Something went wrong, retrying...");
+            await this.delay(30000);
+        }
     }
 }
-                   continue;
-               }
-               
-               const urgentPerkyReport = queuedTopics.find(topic => 
-                   topic.type === 'perky_report' || 
-                   topic.reporter === 'perky'
-               );
-               
-               if (urgentPerkyReport) {
-                   await this.handlePerkyReport(urgentPerkyReport);
-                   
-                   await this.removeTopic(urgentPerkyReport.id);
-                   
-                   const refreshResponse = await fetch('/api/enhanced-chat?type=queue');
-                   const refreshData = await refreshResponse.json();
-                   queuedTopics = refreshData.queue || [];
-                   
-                   continue;
-               }
-               
-               if (!nextRadioScript) {
-                   nextCryptoData = await this.fetchCryptoNews();
-                   if (nextCryptoData) {
-                       this.updateNewsTicker(nextCryptoData);
-                       this.updateStatus("🤖 Porky is preparing his thoughts...");
-                       
-                       const nextTopic = queuedTopics.find(topic => topic.type !== 'perky_report' && topic.reporter !== 'perky');
-                       nextRadioScript = await this.generateRadioContent(nextCryptoData, nextTopic);
-                       
-                       if (nextTopic) {
-                           await this.removeTopic(nextTopic.id);
-                           const refreshResponse = await fetch('/api/enhanced-chat?type=queue');
-                           const refreshData = await refreshResponse.json();
-                           queuedTopics = refreshData.queue || [];
-                       }
-                   }
-               }
-               
-               if (nextRadioScript) {
-                   // Ensure audio is ready just before speaking
-                   await this.ensureAudioReady(nextRadioScript, 'porky');
-                   
-                   // Generate social feed for current topic
-                   this.startSocialFeedForTopic(nextRadioScript, nextCryptoData);
-                   
-                   this.showPorkyTalking();
-                   this.updateStatus("🎙️ Porky is dropping knowledge...");
-                   
-                   // Use preloaded audio if available, otherwise generate on the fly
-                   if (this.preloadedAudio.porky) {
-                       await this.playPreloadedAudio('porky');
-                   } else {
-                       const audioUrl = await this.generateTTSAudio(nextRadioScript, 'porky');
-                       await this.playAudio(audioUrl);
-                   }
-                   
-                   nextRadioScript = null;
-                   nextCryptoData = null;
-               }
-               
-               this.showStudio();
-               this.updateStatus("🎵 Now spinning tracks...");
-               
-               const backgroundGeneration = this.generateNextSegment(queuedTopics);
-               const musicPromise = this.playRandomSong();
-               
-               let audioPreloadPromise = null;
-               
-               try {
-                   const result = await backgroundGeneration;
-                   nextRadioScript = result.content;
-                   nextCryptoData = result.cryptoData;
-                   console.log("✅ Next segment generated!");
-                   
-                   // Start audio preloading, but time it to finish close to when music ends
-                   const musicResult = await musicPromise;
-                   const estimatedSongLength = musicResult?.duration || 180000; // Default 3 minutes
-                   
-                   // If music was very short, preload immediately
-                   if (estimatedSongLength < 30000) {
-                       console.log("🎵 Short song detected, preloading audio now...");
-                       audioPreloadPromise = this.preloadNextAudio(nextRadioScript, 'porky');
-                   } else {
-                       // For longer songs, we already have the script ready, preload just before next speech
-                       console.log("🎵 Audio will be preloaded just-in-time for next segment");
-                   }
-                   
-               } catch (error) {
-                   console.error("Background generation failed:", error);
-                   await musicPromise; // Still wait for music to finish
-               }
-               
-               // Ensure audio is ready
-               if (audioPreloadPromise) {
-                   await audioPreloadPromise;
-               }
-               
-               if (this.isPlaying) {
-                   await this.delay(2000);
-               }
-               
-           } catch (error) {
-               console.error('Error in show loop:', error);
-               this.updateStatus("❌ Something went wrong, retrying...");
-               await this.delay(30000);
-           }
-       }
-   }
 
         async fadeOutAndChangeTrack() {
     return new Promise((resolve) => {
