@@ -1349,10 +1349,19 @@ Loading music library from GitHub...
     }
 
     async addPerkyReport() {
-        document.getElementById('topicType').value = 'perky_report';
-        document.querySelector('[data-reporter="perky"]').click();
-        await this.addTopic();
-    }
+    // Set the form values
+    document.getElementById('topicType').value = 'perky_report';
+    document.getElementById('topicPriority').value = 'normal';
+    
+    // Force set the reporter to perky
+    this.selectedReporter = 'perky';
+    
+    // Update the UI to show perky is selected
+    document.querySelectorAll('.reporter-option').forEach(opt => opt.classList.remove('active'));
+    document.querySelector('[data-reporter="perky"]').classList.add('active');
+    
+    await this.addTopic();
+}
 
     async removeTopic(topicId) {
         try {
