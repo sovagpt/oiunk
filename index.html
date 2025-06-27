@@ -681,23 +681,23 @@ body {
 }
 
         .sponsor-ad {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0) rotate(360deg);
-    width: 400px;
-    height: 300px;
-    z-index: 9999;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
-    border: 4px solid #ff1493;
-    display: none;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 400px !important;
+    height: 300px !important;
+    z-index: 99999 !important;
+    display: none !important;
+    background: rgba(0, 0, 0, 0.9) !important;
+    border-radius: 15px !important;
+    border: 4px solid #ff1493 !important;
+    overflow: hidden !important;
 }
 
 .sponsor-ad.visible {
     display: block !important;
-    animation: sponsorSpinIn 1s ease-out forwards;
+    animation: sponsorSpinIn 1s ease-out forwards !important;
 }
 
 .sponsor-ad.spinning-out {
