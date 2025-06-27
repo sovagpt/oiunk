@@ -2260,20 +2260,45 @@ async showSponsor() {
         'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad5_rpxzor.mp4'
     ];
     
+    // Play sponsor intro audio
+    this.updateStatus('📺 Now a message from our sponsors...');
+    this.showPorkyTalking();
+    const introAudio = new Audio('https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/sponsor.mp3');
+    await new Promise(resolve => {
+        introAudio.onended = resolve;
+        introAudio.onerror = resolve;
+        introAudio.play();
+    });
+    
+    this.showStudio();
+    
+    // Show video ad
     const randomVideo = videos[Math.floor(Math.random() * videos.length)];
     const sponsor = document.getElementById('simpleSponsor');
     const video = document.getElementById('simpleVideo');
     
     video.src = randomVideo;
     sponsor.style.display = 'block';
-    
     video.play();
     
-    // Hide after 10 seconds
-    setTimeout(() => {
-        sponsor.style.display = 'none';
-        video.pause();
-    }, 10000);
+    // Wait for video to finish (8 seconds)
+    await new Promise(resolve => setTimeout(resolve, 8000));
+    
+    // Hide video
+    sponsor.style.display = 'none';
+    video.pause();
+    
+    // Play outro audio
+    this.showPorkyTalking();
+    const outroAudio = new Audio('https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/sponsor1.mp3');
+    await new Promise(resolve => {
+        outroAudio.onended = resolve;
+        outroAudio.onerror = resolve;
+        outroAudio.play();
+    });
+    
+    this.showStudio();
+    this.updateStatus('📻 Back to regular programming!');
 }
 
 async generateDJDrop() {
