@@ -679,6 +679,34 @@ body {
 .reporter-option.perky.active {
     background: #ff1493;
 }
+
+        .simple-sponsor {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    height: 350px;
+    background: black;
+    border: 5px solid #ff1493;
+    border-radius: 20px;
+    z-index: 9999;
+    display: none;
+    padding: 20px;
+    text-align: center;
+}
+
+.simple-sponsor video {
+    width: 100%;
+    height: 280px;
+    border-radius: 10px;
+}
+
+.simple-sponsor h3 {
+    color: #ff1493;
+    margin: 0 0 10px 0;
+    font-family: 'Bright Aura', 'Comic Sans MS', cursive, sans-serif;
+}
     </style>
 </head>
 <body>
@@ -1939,9 +1967,11 @@ Loading music library from GitHub...
                    this.updateStatus("🎵 Post-report music time...");
                    await this.playRandomSong();
 
-// Check for sponsor ad after song
 if (this.isPlaying) {
-    await this.delay(2000);
+    const adPlayed = await this.checkSponsor();
+    if (!adPlayed) {
+        await this.delay(2000);
+    }
 }
                    continue;
                }
@@ -2213,6 +2243,39 @@ fadeAudioVolume(fromVolume, toVolume, duration) {
     }, stepTime);
 }
 
+        async checkSponsor() {
+    if (Math.random() < 1.0) { // 100% for testing
+        await this.showSponsor();
+        return true;
+    }
+    return false;
+}
+
+async showSponsor() {
+    const videos = [
+        'https://res.cloudinary.com/degblqvla/video/upload/v1750983276/ad1_x5dujo.mp4',
+        'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad2_qghmup.mp4',
+        'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad3_ziakab.mp4',
+        'https://res.cloudinary.com/degblqvla/video/upload/v1750983278/ad4_n3lpfj.mp4',
+        'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad5_rpxzor.mp4'
+    ];
+    
+    const randomVideo = videos[Math.floor(Math.random() * videos.length)];
+    const sponsor = document.getElementById('simpleSponsor');
+    const video = document.getElementById('simpleVideo');
+    
+    video.src = randomVideo;
+    sponsor.style.display = 'block';
+    
+    video.play();
+    
+    // Hide after 10 seconds
+    setTimeout(() => {
+        sponsor.style.display = 'none';
+        video.pause();
+    }, 10000);
+}
+
 async generateDJDrop() {
     const djDropFiles = [
         'djdrop001.mp3',
@@ -2395,5 +2458,9 @@ if ('speechSynthesis' in window) {
    };
 }
 </script>
+    <div id="simpleSponsor" class="simple-sponsor">
+    <h3>📺 SPONSOR MESSAGE</h3>
+    <video id="simpleVideo" muted></video>
+</div>
 </body>
 </html>
