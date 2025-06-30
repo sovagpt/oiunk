@@ -22,4 +22,4 @@ track021=Pitbull - Give Me Everything
 track022=Pitbull - Hotel Room Service
 track023=Corona - Rhythm of The Night
 track024=Katy Perry - California Gurls
-track025= Dua Lipa - New Rules
+track025=Dua Lipa - New Rules
