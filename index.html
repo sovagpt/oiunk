@@ -1863,18 +1863,41 @@ Loading music library from GitHub...
         }
 
         async playTTSAudio(text, voiceType = 'porky') {
+    // DON'T show talking animation yet - wait for audio to be ready
+    
     // Try ElevenLabs first
     const audioUrl = await this.generateTTSAudio(text, voiceType);
     
     if (audioUrl) {
         console.log(`🎵 Playing ElevenLabs audio for ${voiceType}`);
+        
+        // NOW show the talking animation right before playing audio
+        if (voiceType === 'porky') {
+            this.showPorkyTalking();
+        }
+        
         await this.playAudio(audioUrl);
+        
+        // Go back to studio when audio ends
+        if (voiceType === 'porky') {
+            this.showStudio();
+        }
     } else {
         console.log(`🎤 Using browser TTS fallback for ${voiceType}`);
+        
+        // For browser TTS, show animation right before speaking
+        if (voiceType === 'porky') {
+            this.showPorkyTalking();
+        }
+        
         await this.textToSpeech(text, voiceType);
+        
+        // Go back to studio when speech ends
+        if (voiceType === 'porky') {
+            this.showStudio();
+        }
     }
 }
-
         async textToSpeech(text, voiceType = 'porky') {
             return new Promise((resolve) => {
                 if ('speechSynthesis' in window) {
@@ -2091,12 +2114,11 @@ Loading music library from GitHub...
         
         this.topicInput.value = '';
         
-        this.showPorkyTalking();
         this.updateStatus('🎙️ Porky: BREAKING NEWS ALERT!');
         
+        // DON'T call showPorkyTalking here - playTTSAudio will handle it
         await this.playTTSAudio(radioScript, 'porky');
         
-        this.showStudio();
         this.updateStatus('📻 Breaking news delivered!');
         
     } catch (error) {
@@ -2104,7 +2126,6 @@ Loading music library from GitHub...
         this.updateStatus('❌ Breaking news system malfunction!');
     }
 }
-
         async showPerkyReporting() {
             return new Promise((resolve) => {
                 this.showStudio();
@@ -2134,12 +2155,13 @@ Loading music library from GitHub...
         this.updateStatus('📺 Perky: Live from the newsroom!');
         await this.showPerkyReporting();
         
+        // Perky doesn't need the GIF timing fix since she uses a different animation
         await this.playTTSAudio(perkyScript, 'perky');
         
         await this.hidePerky();
-        this.showPorkyTalking();
         this.updateStatus('🎙️ Porky: Thanks for that update, Perky!');
         
+        // DON'T call showPorkyTalking here - playTTSAudio will handle it
         await this.playTTSAudio(porkyFollowUp, 'porky');
         
         this.showStudio();
@@ -2241,9 +2263,9 @@ Loading music library from GitHub...
                 // Generate social feed for current topic
                 this.startSocialFeedForTopic(nextRadioScript, nextCryptoData);
                 
-                this.showPorkyTalking();
                 this.updateStatus("🎙️ Porky is dropping knowledge...");
                 
+                // DON'T call showPorkyTalking here - playTTSAudio will handle it
                 await this.playTTSAudio(nextRadioScript, 'porky');
                 
                 nextRadioScript = null;
