@@ -1230,67 +1230,74 @@ Loading music library from GitHub...
         }
 
         updateNewsTicker(data) {
-            if (Array.isArray(data)) {
-                const tickerText = data.map(coin => 
-                    `${coin.name}: ${coin.current_price.toFixed(2)} (${coin.price_change_percentage_24h > 0 ? '+' : ''}${coin.price_change_percentage_24h.toFixed(1)}%)`
-                ).join(' • ');
-                this.newsTicker.textContent = tickerText;
-                
-                this.updateOverlayTicker(data);
-            } else {
-                this.newsTicker.textContent = data;
-                this.addBreakingToTicker(data);
-            }
-        }
+    if (Array.isArray(data)) {
+        const tickerText = data.map(coin => 
+            `${coin.name}: ${coin.current_price.toFixed(2)} (${coin.price_change_percentage_24h > 0 ? '+' : ''}${coin.price_change_percentage_24h.toFixed(1)}%)`
+        ).join(' • ');
+        this.newsTicker.textContent = tickerText;
+        
+        // REMOVED the circular call to updateOverlayTicker here
+    } else {
+        this.newsTicker.textContent = data;
+        this.addBreakingToTicker(data);
+    }
+}
 
         updateOverlayTicker(cryptoData) {
-            console.log('🎯 Updating overlay ticker with data:', cryptoData);
-            
-            if (!cryptoData || cryptoData.length === 0) {
-                console.error('❌ No crypto data provided to ticker');
-                // Set a default message
-                if (this.cryptoTicker) {
-                    this.cryptoTicker.innerHTML = '<span class="ticker-item">Loading crypto prices...</span>';
-                }
-                return;
-            }
-            
-            const tickerItems = cryptoData.map(coin => {
-                const isUp = coin.price_change_percentage_24h > 0;
-                const arrow = isUp ? '📈' : '📉';
-                const priceColorClass = isUp ? 'price-up' : 'price-down';
-                
-                return `<span class="ticker-item">
-                    <span class="coin-price">${coin.symbol.toUpperCase()}</span> 
-                    <span class="${priceColorClass}">$${coin.current_price < 1 ? coin.current_price.toFixed(4) : coin.current_price.toLocaleString()}</span> 
-                    <span class="${priceColorClass}">${arrow}${Math.abs(coin.price_change_percentage_24h).toFixed(1)}%</span>
-                </span>`;
-            }).join('');
-            
-            // Repeat the content multiple times for seamless scrolling
-            const fullContent = (tickerItems + ' ').repeat(10);
-            
-            console.log('🎯 Setting ticker content...');
-            
-            if (this.cryptoTicker) {
-                // Stop any existing animation
-                this.cryptoTicker.style.animation = 'none';
-                
-                // Set the content
-                this.cryptoTicker.innerHTML = fullContent;
-                
-                // Force reflow and restart animation
-                this.cryptoTicker.offsetHeight;
-                this.cryptoTicker.style.animation = 'scroll-ticker 2000s linear infinite';
-                
-                console.log('✅ Crypto ticker updated and animated');
-            } else {
-                console.error('❌ Crypto ticker element not found!');
-            }
-            
-            // Also update the news ticker
-            this.updateNewsTicker(cryptoData);
+    console.log('🎯 Updating overlay ticker with data:', cryptoData);
+    
+    if (!cryptoData || cryptoData.length === 0) {
+        console.error('❌ No crypto data provided to ticker');
+        // Set a default message
+        if (this.cryptoTicker) {
+            this.cryptoTicker.innerHTML = '<span class="ticker-item">Loading crypto prices...</span>';
         }
+        return;
+    }
+    
+    const tickerItems = cryptoData.map(coin => {
+        const isUp = coin.price_change_percentage_24h > 0;
+        const arrow = isUp ? '📈' : '📉';
+        const priceColorClass = isUp ? 'price-up' : 'price-down';
+        
+        return `<span class="ticker-item">
+            <span class="coin-price">${coin.symbol.toUpperCase()}</span> 
+            <span class="${priceColorClass}">$${coin.current_price < 1 ? coin.current_price.toFixed(4) : coin.current_price.toLocaleString()}</span> 
+            <span class="${priceColorClass}">${arrow}${Math.abs(coin.price_change_percentage_24h).toFixed(1)}%</span>
+        </span>`;
+    }).join('');
+    
+    // Repeat the content multiple times for seamless scrolling
+    const fullContent = (tickerItems + ' ').repeat(10);
+    
+    console.log('🎯 Setting ticker content...');
+    
+    if (this.cryptoTicker) {
+        // Stop any existing animation
+        this.cryptoTicker.style.animation = 'none';
+        
+        // Set the content
+        this.cryptoTicker.innerHTML = fullContent;
+        
+        // Force reflow and restart animation
+        this.cryptoTicker.offsetHeight;
+        this.cryptoTicker.style.animation = 'scroll-ticker 2000s linear infinite';
+        
+        console.log('✅ Crypto ticker updated and animated');
+    } else {
+        console.error('❌ Crypto ticker element not found!');
+    }
+    
+    // Update the news ticker separately (without calling updateOverlayTicker again)
+    if (Array.isArray(cryptoData)) {
+        const tickerText = cryptoData.map(coin => 
+            `${coin.name}: ${coin.current_price.toFixed(2)} (${coin.price_change_percentage_24h > 0 ? '+' : ''}${coin.price_change_percentage_24h.toFixed(1)}%)`
+        ).join(' • ');
+        if (this.newsTicker) {
+            this.newsTicker.textContent = tickerText;
+        }
+    }
+}
 
         addBreakingToTicker(breakingNews) {
            this.newsTicker.textContent = `🚨 BREAKING: ${breakingNews} 🚨`;
@@ -2306,8 +2313,29 @@ Loading music library from GitHub...
     }
 
     // Initialize the radio
-    const radio = new OinkFMRadio();
+    let radio;
 
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize radio after DOM is ready
+    radio = new OinkFMRadio();
+    console.log('🎉 OINK FM Radio initialized successfully!');
+});
+
+// Backup initialization in case DOMContentLoaded already fired
+if (document.readyState === 'loading') {
+    // DOM hasn't finished loading yet
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!radio) {
+            radio = new OinkFMRadio();
+            console.log('🎉 OINK FM Radio initialized (backup)!');
+        }
+    });
+} else {
+    // DOM has already loaded
+    radio = new OinkFMRadio();
+    console.log('🎉 OINK FM Radio initialized immediately!');
+}
     // Global functions for buttons
     function startShow() {
         radio.startShow();
