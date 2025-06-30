@@ -1942,71 +1942,74 @@ Loading music library from GitHub...
 
         // Music and Audio Playback
         async playRandomSong() {
-            if (this.songs.length === 0) {
-                console.log('🎵 No songs available, skipping music segment');
+    if (this.songs.length === 0) {
+        console.log('🎵 No songs available, skipping music segment');
+        await this.delay(30000);
+        return { duration: 30000 };
+    }
+    
+    for (let attempt = 0; attempt < 3; attempt++) {
+        const randomSong = this.songs[Math.floor(Math.random() * this.songs.length)];
+        const trackName = this.getTrackName(randomSong);
+        
+        try {
+            console.log(`🎵 Attempting to play: ${randomSong.split('/').pop()} (attempt ${attempt + 1})`);
+            
+            return new Promise((resolve) => {
+                const songStartTime = Date.now();
+                
+                this.audioPlayer.onerror = (error) => {
+                    const songDuration = Date.now() - songStartTime;
+                    console.error(`❌ Song failed to play:`, error);
+                    this.hideNowPlaying();
+                    resolve({ duration: songDuration });
+                };
+                
+                this.audioPlayer.oncanplaythrough = () => {
+                    console.log(`✅ Song loaded successfully: ${randomSong.split('/').pop()}`);
+                    this.showNowPlaying(trackName);
+                    
+                    // Schedule DJ drops during the song
+                    this.scheduleDJDrops();
+                };
+                
+                this.audioPlayer.onended = () => {
+                    const songDuration = Date.now() - songStartTime;
+                    console.log(`🎵 Song finished playing (${Math.round(songDuration/1000)}s)`);
+                    this.hideNowPlaying();
+                    resolve({ duration: songDuration });
+                };
+                
+                this.audioPlayer.src = randomSong;
+                this.audioPlayer.play();
+                
+                const timeout = setTimeout(() => {
+                    const songDuration = Date.now() - songStartTime;
+                    console.log(`⏰ Song timeout reached (${Math.round(songDuration/1000)}s)`);
+                    this.audioPlayer.pause();
+                    this.hideNowPlaying();
+                    resolve({ duration: songDuration, timedOut: true });
+                }, 240000);
+                
+                this.audioPlayer.onended = () => {
+                    clearTimeout(timeout);
+                    const songDuration = Date.now() - songStartTime;
+                    this.hideNowPlaying();
+                    resolve({ duration: songDuration });
+                };
+            });
+            
+        } catch (error) {
+            console.error(`❌ Song attempt ${attempt + 1} failed:`, error);
+            if (attempt === 2) {
+                console.log('🎵 All song attempts failed, continuing without music');
+                this.hideNowPlaying();
                 await this.delay(30000);
                 return { duration: 30000 };
             }
-            
-            for (let attempt = 0; attempt < 3; attempt++) {
-                const randomSong = this.songs[Math.floor(Math.random() * this.songs.length)];
-                const trackName = this.getTrackName(randomSong);
-                
-                try {
-                    console.log(`🎵 Attempting to play: ${randomSong.split('/').pop()} (attempt ${attempt + 1})`);
-                    
-                    return new Promise((resolve) => {
-                        const songStartTime = Date.now();
-                        
-                        this.audioPlayer.onerror = (error) => {
-                            const songDuration = Date.now() - songStartTime;
-                            console.error(`❌ Song failed to play:`, error);
-                            this.hideNowPlaying();
-                            resolve({ duration: songDuration });
-                        };
-                        
-                        this.audioPlayer.oncanplaythrough = () => {
-                            console.log(`✅ Song loaded successfully: ${randomSong.split('/').pop()}`);
-                            this.showNowPlaying(trackName);
-                        };
-                        
-                        this.audioPlayer.onended = () => {
-                            const songDuration = Date.now() - songStartTime;
-                            console.log(`🎵 Song finished playing (${Math.round(songDuration/1000)}s)`);
-                            this.hideNowPlaying();
-                            resolve({ duration: songDuration });
-                        };
-                        
-                        this.audioPlayer.src = randomSong;
-                        this.audioPlayer.play();
-                        
-                        const timeout = setTimeout(() => {
-                            const songDuration = Date.now() - songStartTime;
-                            console.log(`⏰ Song timeout reached (${Math.round(songDuration/1000)}s)`);
-                            this.audioPlayer.pause();
-                            this.hideNowPlaying();
-                            resolve({ duration: songDuration, timedOut: true });
-                        }, 240000);
-                        
-                        this.audioPlayer.onended = () => {
-                            clearTimeout(timeout);
-                            const songDuration = Date.now() - songStartTime;
-                            this.hideNowPlaying();
-                            resolve({ duration: songDuration });
-                        };
-                    });
-                    
-                } catch (error) {
-                    console.error(`❌ Song attempt ${attempt + 1} failed:`, error);
-                    if (attempt === 2) {
-                        console.log('🎵 All song attempts failed, continuing without music');
-                        this.hideNowPlaying();
-                        await this.delay(30000);
-                        return { duration: 30000 };
-                    }
-                }
-            }
         }
+    }
+}
 
         // Sponsor/Advertisement System
         async checkSponsor() {
@@ -2018,45 +2021,86 @@ Loading music library from GitHub...
         }
 
         async showSponsor() {
-            const videos = [
-                'https://res.cloudinary.com/degblqvla/video/upload/v1750983276/ad1_x5dujo.mp4',
-                'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad2_qghmup.mp4',
-                'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad3_ziakab.mp4',
-                'https://res.cloudinary.com/degblqvla/video/upload/v1750983278/ad4_n3lpfj.mp4',
-                'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad5_rpxzor.mp4'
-            ];
-            
-            this.updateStatus('📺 Now a message from our sponsors...');
-            
-            // Show video ad
-            const randomVideo = videos[Math.floor(Math.random() * videos.length)];
-            const sponsor = document.getElementById('simpleSponsor');
-            const video = document.getElementById('simpleVideo');
-            
-            video.src = randomVideo;
-            video.muted = false;
-            sponsor.style.display = 'block';
+    const videos = [
+        'https://res.cloudinary.com/degblqvla/video/upload/v1750983276/ad1_x5dujo.mp4',
+        'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad2_qghmup.mp4',
+        'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad3_ziakab.mp4',
+        'https://res.cloudinary.com/degblqvla/video/upload/v1750983278/ad4_n3lpfj.mp4',
+        'https://res.cloudinary.com/degblqvla/video/upload/v1750983279/ad5_rpxzor.mp4'
+    ];
+    
+    // Play sponsor intro audio
+    this.updateStatus('📺 Now a message from our sponsors...');
+    this.showPorkyTalking();
+    
+    try {
+        const introAudio = new Audio('https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/sponsor.mp3');
+        await new Promise(resolve => {
+            introAudio.onended = resolve;
+            introAudio.onerror = () => {
+                console.error('Sponsor intro audio failed to load');
+                resolve();
+            };
+            introAudio.play().catch(() => {
+                console.error('Sponsor intro audio failed to play');
+                resolve();
+            });
+        });
+    } catch (error) {
+        console.error('Sponsor intro audio error:', error);
+    }
+    
+    this.showStudio();
+    
+    // Show video ad
+    const randomVideo = videos[Math.floor(Math.random() * videos.length)];
+    const sponsor = document.getElementById('simpleSponsor');
+    const video = document.getElementById('simpleVideo');
+    
+    video.src = randomVideo;
+    video.muted = false;
+    sponsor.style.display = 'block';
 
-            // Animate in
-            setTimeout(() => {
-                sponsor.classList.add('show');
-            }, 100);
+    // Animate in
+    setTimeout(() => {
+        sponsor.classList.add('show');
+    }, 100);
 
-            video.play();
-            
-            // Wait for video to finish (8 seconds)
-            await new Promise(resolve => setTimeout(resolve, 8000));
-            
-            // Hide video
-            sponsor.classList.remove('show');
-            setTimeout(() => {
-                sponsor.style.display = 'none';
-                video.pause();
-            }, 800);
-            
-            this.updateStatus('📻 Back to regular programming!');
-        }
-
+    video.play();
+    
+    // Wait for video to finish (8 seconds)
+    await new Promise(resolve => setTimeout(resolve, 8000));
+    
+    // Hide video
+    sponsor.classList.remove('show');
+    setTimeout(() => {
+        sponsor.style.display = 'none';
+        video.pause();
+    }, 800);
+    
+    // Play outro audio
+    this.showPorkyTalking();
+    
+    try {
+        const outroAudio = new Audio('https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/sponsor1.mp3');
+        await new Promise(resolve => {
+            outroAudio.onended = resolve;
+            outroAudio.onerror = () => {
+                console.error('Sponsor outro audio failed to load');
+                resolve();
+            };
+            outroAudio.play().catch(() => {
+                console.error('Sponsor outro audio failed to play');
+                resolve();
+            });
+        });
+    } catch (error) {
+        console.error('Sponsor outro audio error:', error);
+    }
+    
+    this.showStudio();
+    this.updateStatus('📻 Back to regular programming!');
+}
         // Reporter Functions
         async perkyReport() {
     const content = this.topicInput.value.trim();
@@ -2142,6 +2186,127 @@ Loading music library from GitHub...
                 setTimeout(resolve, 800);
             });
         }
+
+        async generateDJDrop() {
+    const djDropFiles = [
+        'djdrop001.mp3',
+        'djdrop002.mp3', 
+        'djdrop003.mp3',
+        'djdrop004.mp3',
+        'djdrop005.mp3',
+        'djdrop006.mp3',
+        'djdrop007.mp3',
+        'djdrop008.mp3',
+        'djdrop009.mp3',
+        'djdrop010.mp3'
+    ];
+    
+    const randomDrop = djDropFiles[Math.floor(Math.random() * djDropFiles.length)];
+    const audioUrl = `https://raw.githubusercontent.com/sovagpt/oiunk/main/assets/audio/djdrops/${randomDrop}`;
+    
+    try {
+        // Test if the file exists
+        const response = await fetch(audioUrl, { method: 'HEAD' });
+        if (response.ok) {
+            return { audioUrl, text: `Playing ${randomDrop}` };
+        } else {
+            console.log(`DJ drop ${randomDrop} not found`);
+            return null;
+        }
+    } catch (error) {
+        console.error('DJ drop file check failed:', error);
+        return null;
+    }
+}
+
+        async scheduleDJDrops() {
+    if (!this.isPlaying) return;
+    
+    // Schedule only 1-2 drops during the song
+    const dropCount = Math.floor(Math.random() * 2) + 1; // 1 or 2 drops
+    
+    for (let i = 0; i < dropCount; i++) {
+        const randomTime = Math.random() * 120000 + 60000; // Between 1min and 3min into song
+        
+        setTimeout(async () => {
+            if (this.isPlaying && this.audioPlayer && !this.audioPlayer.paused) {
+                console.log('🎙️ Porky jumping in with a DJ drop...');
+                
+                const djDrop = await this.generateDJDrop();
+                if (djDrop) {
+                    this.updateStatus('🎙️ Porky: DJ Drop!');
+                    await this.duckMusicForSpeech(djDrop.audioUrl, djDrop.text, 'porky');
+                    this.updateStatus('🎵 Music continuing...');
+                } else {
+                    console.log('No DJ drop files available - skipping');
+                }
+            }
+        }, randomTime);
+    }
+}
+
+async duckMusicForSpeech(audioUrl, speechText, voiceType = 'porky') {
+    return new Promise((resolve) => {
+        // Show Porky talking animation
+        this.showPorkyTalking();
+        
+        // Fade music down to 5%
+        this.fadeAudioVolume(1.0, 0.05, 1000);
+        
+        setTimeout(async () => {
+            // Play speech
+            const speechAudio = new Audio(audioUrl);
+            speechAudio.volume = 1.0;
+            
+            speechAudio.onended = () => {
+                // Go back to studio/blinking when speech ends
+                this.showStudio();
+                
+                // Fade music back up after speech
+                setTimeout(() => {
+                    this.fadeAudioVolume(0.05, 1.0, 1000);
+                    URL.revokeObjectURL(audioUrl);
+                    resolve();
+                }, 500);
+            };
+            
+            speechAudio.onerror = () => {
+                // Go back to studio if audio fails
+                this.showStudio();
+                this.fadeAudioVolume(0.05, 1.0, 1000);
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+            };
+            
+            speechAudio.play().catch(() => {
+                // Go back to studio if play fails
+                this.showStudio();
+                this.fadeAudioVolume(0.05, 1.0, 1000);
+                resolve();
+            });
+        }, 1200); // Wait for music to duck down
+    });
+}
+
+fadeAudioVolume(fromVolume, toVolume, duration) {
+    if (!this.audioPlayer) return;
+    
+    const steps = 20;
+    const stepTime = duration / steps;
+    const volumeStep = (toVolume - fromVolume) / steps;
+    let currentStep = 0;
+    
+    const fadeInterval = setInterval(() => {
+        currentStep++;
+        const newVolume = fromVolume + (volumeStep * currentStep);
+        this.audioPlayer.volume = Math.max(0, Math.min(1, newVolume));
+        
+        if (currentStep >= steps) {
+            clearInterval(fadeInterval);
+            this.audioPlayer.volume = toVolume;
+        }
+    }, stepTime);
+}
 
         async handlePerkyReport(topic) {
     try {
