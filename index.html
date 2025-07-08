@@ -779,7 +779,7 @@
                     <div class="social-message">
                         <span class="social-username">OinkFan420</span>
                         <span class="social-timestamp">now</span>
-                        <div class="social-message-text">OINK FM is fire! 🔥 Porky dropping alpha!</div>
+                        <div class="social-message-text">BONK FM is fire! 🔥 Bonky dropping alpha!</div>
                     </div>
                 </div>
             </div>
@@ -1335,18 +1335,24 @@ Loading music library from GitHub...
         }
 
         getFallbackMessages(currentTopic = null) {
-            const genericMessages = [
-                { username: "CryptoWhale", text: "OINK FM keeping me updated on the charts 📈", type: "crypto-bullish" },
-                { username: "PorkyFan69", text: "Porky's voice is so soothing while my portfolio bleeds 😭", type: "crypto-bearish" },
-                { username: "DiamondHands", text: "Thanks for the alpha Porky! 💎🙌", type: "diamond" },
-                { username: "MoonBoy420", text: "When lambo Porky? 🚗🌙", type: "meme" },
-                { username: "DeFiDegen", text: "This radio station hits different fr", type: "vip" },
-                { username: "SolanaSister", text: "SOL gang rise up! 🚀", type: "crypto-bullish" },
-                { username: "EthMaxi", text: "ETH still king don't @ me", type: "crypto-bullish" },
-                { username: "RugPuller", text: "Porky never rugs us with bad takes 🐷", type: "meme" },
-                { username: "YieldFarmer", text: "Farming yields and listening to OINK FM 🌾", type: "crypto-bullish" },
-                { username: "PumpItUp", text: "This track goes hard! 🎵", type: "meme" }
-            ];
+    const genericMessages = [
+        // CHANGE THESE MESSAGES
+        { username: "CryptoWhale", text: "BONK FM keeping me updated on the charts 📈", type: "crypto-bullish" },
+        { username: "BuddyFan69", text: "Buddy's voice is so soothing while my portfolio bleeds 😭", type: "crypto-bearish" },
+        { username: "DiamondHands", text: "Thanks for the alpha Buddy! 💎🙌", type: "diamond" },
+        { username: "MoonBoy420", text: "When lambo Buddy? 🚗🌙", type: "meme" },
+        { username: "DeFiDegen", text: "This radio station hits different fr", type: "vip" },
+        { username: "SolanaSister", text: "SOL gang rise up! 🚀", type: "crypto-bullish" },
+        { username: "EthMaxi", text: "ETH still king don't @ me", type: "crypto-bullish" },
+        { username: "RugPuller", text: "Buddy never rugs us with bad takes 🐕", type: "meme" },
+        { username: "YieldFarmer", text: "Farming yields and listening to BONK FM 🌾", type: "crypto-bullish" },
+        { username: "PumpItUp", text: "This track goes hard! 🎵", type: "meme" },
+        { username: "DogeCoinMaxis", text: "DOG COINS TO THE MOON! 🐕🚀", type: "crypto-bullish" },
+        { username: "BonkArmy", text: "BONK IS THE WAY! 💪", type: "meme" },
+        { username: "WoofWoof", text: "Buddy's barks are pure alpha 🐕‍🦺", type: "diamond" },
+        { username: "TailWagger", text: "This good boy knows crypto! 🦴", type: "meme" },
+        { username: "PuppyPumper", text: "WOOF WOOF! Let's pump it! 📈", type: "crypto-bullish" }
+    ];
 
             if (currentTopic) {
                 if (currentTopic.toLowerCase().includes('bitcoin') || currentTopic.toLowerCase().includes('btc')) {
@@ -2358,12 +2364,12 @@ fadeAudioVolume(fromVolume, toVolume, duration) {
 
     // Add welcome messages
     setTimeout(() => {
-        this.addSocialMessage("OinkFM_Official", "🎙️ OINK FM is now LIVE! Welcome everyone!", "breaking", true);
-    }, 1000);
+    this.addSocialMessage("OinkFM_Official", "🎙️ OINK FM is now LIVE! Welcome everyone!", "breaking", true);
+}, 1000);
 
-    setTimeout(() => {
-        this.addSocialMessage("CommunityMod", "Drop your crypto takes in the chat! 💬", "meme", true);
-    }, 3000);
+setTimeout(() => {
+    this.addSocialMessage("CommunityMod", "Drop your crypto takes in the chat! 💬", "meme", true);
+}, 3000);
     
     let queuedTopics = [];
     try {
