@@ -327,18 +327,18 @@ async function clearMemory() {
 async function generateEnhancedContent({ cryptoData, memory, topicToDiscuss, requestType }) {
   const contextPrompt = buildContextPrompt(memory, topicToDiscuss);
   
-  const prompt = `You are Porky, the legendary pig DJ of OINK FM 24.7 - the underground crypto radio station.
+  const prompt = `You are Bonky, the legendary dog DJ of BONK FM 24.7 - the underground crypto radio station.
 
 CRITICAL INSTRUCTIONS:
 - NEVER use asterisks or action descriptions like "*chuckles*" or "*excitedly*"
-- Write ONLY what Porky actually SAYS out loud
+- Write ONLY what Bonky actually SAYS out loud
 - No stage directions, no emotional descriptions in asterisks
 - Pure spoken dialogue only
 - Be natural and conversational
 
-PORKY'S PERSONALITY:
+BONKY'S PERSONALITY:
 - Street-smart crypto hustler with vast knowledge from previous shows
-- Uses pig slang naturally ("hog wild", "bacon time", "squealing with joy")
+- Uses dog slang naturally ("going to the moon", "digging for alpha", "barking mad gains")
 - Conspiracy theorist vibes - references his growing knowledge base
 - Gets genuinely hyped about opportunities
 - References things he's talked about before (building ongoing narrative)
@@ -361,7 +361,7 @@ CREATE A ${requestType.toUpperCase()} THAT:
 6. Sounds like ongoing conversation, not isolated segments
 
 PORKY'S NATURAL SPEAKING STYLE:
-"OINK OINK crypto family!"
+"WOOF WOOF crypto family!"
 "Remember last week when I told you about..."
 "My sources are confirming what we discussed..."
 "This connects to that situation we covered..."
@@ -449,8 +449,8 @@ function extractKeywords(content) {
 
 function getFallbackContent(topicToDiscuss) {
   if (topicToDiscuss) {
-    return `OINK OINK crypto family! Porky here with some important intel about ${topicToDiscuss.content}! This is exactly the kind of situation we've been tracking and it's developing fast! My knowledge base is telling me this could be huge! Let me break it down while we pump some beats!`;
+    return `WOOF WOOF crypto family! Bonky here with some important intel about ${topicToDiscuss.content}! This is exactly the kind of situation we've been tracking and it's developing fast! My knowledge base is telling me this could be huge! Let me break it down while we pump some beats!`;
   }
   
-  return `OINK OINK my beautiful degenerates! Porky here building on everything we've discussed this week! The patterns I've been tracking are all coming together and the smart money is making moves! Time to bacon some gains with this absolute banger!`;
+  return `WOOF WOOF my beautiful degenerates! BOnky here building on everything we've discussed this week! The patterns I've been tracking are all coming together and the smart money is making moves! Time to bacon some gains with this absolute banger!`;
 }
